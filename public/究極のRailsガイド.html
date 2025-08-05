@@ -1,0 +1,3226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruby & Rails 学習ガイド - 個人用メモ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            line-height: 1.7;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 100px 0;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) translateX(0px); }
+            33% { transform: translateY(-10px) translateX(10px); }
+            66% { transform: translateY(10px) translateX(-10px); }
+            100% { transform: translateY(0px) translateX(0px); }
+        }
+        
+        .hero h1 {
+            font-size: 4.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.2s both;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero .ruby-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px auto 0;
+            max-width: 800px;
+            animation: fadeInUp 1s ease-out 0.4s both;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section {
+            background: white;
+            margin: 30px 0;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        h2 {
+            color: #1a202c;
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20px;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        h3 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin: 30px 0 15px 0;
+            position: relative;
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e5f5 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-box::before {
+            content: '💡';
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #ecfdf5 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #10b981;
+        }
+        
+        .code-box {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .code-box::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            box-shadow: 20px 0 0 #f59e0b, 40px 0 0 #10b981;
+        }
+        
+        .code-box pre {
+            margin-top: 30px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .ruby-highlight {
+            background: #cc342d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .rails-highlight {
+            background: #d30001;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .tag-selector {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .tag.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            transform: scale(1.05);
+        }
+        
+        .content-panel {
+            display: none;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin: 20px 0;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .content-panel.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+            transition: background 0.3s ease;
+        }
+        
+        .flow-chart {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .flow-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 10px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        
+        .flow-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .flow-arrow {
+            font-size: 30px;
+            color: #667eea;
+            margin: 10px 0;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .important {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .important::before {
+            content: '⚠️';
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+        
+        .tip {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .tip::before {
+            content: '💡';
+            font-size: 1.2rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+        
+        .warning {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 5px solid #ef4444;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .warning::before {
+            content: '🚨';
+            font-size: 1.2rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .pros, .cons {
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .pros {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 5px solid #10b981;
+        }
+        
+        .cons {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 5px solid #ef4444;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 5px;
+        }
+        
+        .advanced-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        }
+        
+        .beginner-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .official-resource {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .official-resource::before {
+            content: '📖';
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+        
+        .interactive-demo {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border: 2px solid #8b5cf6;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .nav-tabs {
+                justify-content: center;
+            }
+        }
+        
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="container">
+        <div class="hero">
+            <h1><span class="ruby-highlight">Ruby</span> & <span class="rails-highlight">Rails</span><br>学習ガイド</h1>
+            <p class="subtitle">個人的な学習メモ・参考資料集</p>
+            
+            <div class="ruby-info">
+                <h3>🚀 Rubyとは？</h3>
+                <p><strong>「プログラマーの親友」</strong> - オープンソースの動的プログラミング言語</p>
+                <ul style="text-align: left; margin-top: 15px;">
+                    <li>✨ <strong>シンプルさと高い生産性</strong>を備えた言語</li>
+                    <li>🎯 <strong>読みやすく、書きやすい</strong>エレガントな文法</li>
+                    <li>💎 <strong>プログラマーの幸福</strong>を重視した設計思想</li>
+                    <li>🌏 日本生まれの言語で、<strong>グローバルコミュニティ</strong>が活発</li>
+                </ul>
+                
+                <div class="interactive-demo">
+                    <h4>🎮 今すぐRubyを試してみよう！</h4>
+                    <p>30分でRubyの基礎をマスター</p>
+                    <button class="demo-button" onclick="window.open('https://try.ruby-lang.org/', '_blank')">
+                        Try Ruby オンライン
+                    </button>
+                    <button class="demo-button" onclick="showContent('ruby-basics')">
+                        基礎文法を学ぶ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showMainContent('ruby-intro')">Ruby入門</div>
+            <div class="nav-tab" onclick="showMainContent('ruby-syntax')">Ruby文法</div>
+            <div class="nav-tab" onclick="showMainContent('rails-basics')">Rails基礎</div>
+            <div class="nav-tab" onclick="showMainContent('mvc-deep')">MVC詳解</div>
+            <div class="nav-tab" onclick="showMainContent('advanced')">実践テクニック</div>
+            <div class="nav-tab" onclick="showMainContent('resources')">学習リソース</div>
+        </div>
+
+
+        <!-- Ruby入門 -->
+        <div id="ruby-intro" class="content-section active">
+            <div class="section">
+                <h2>🛠️ 開発環境の準備</h2>
+                
+                <div class="important">
+                    <strong>Windows ユーザーへの重要なアドバイス</strong><br>
+                    Windowsで直接Ruby開発すると環境トラブルが多発します。<br>
+                    <strong>WSL2 + Ubuntu + VS Code</strong> の組み合わせが最も安定で推奨です！
+                </div>
+
+                <h3>🖥️ OS別推奨セットアップ</h3>
+
+                <div class="tag-selector">
+                    <div class="tag active" onclick="showEnvContent('windows')">Windows (WSL2)</div>
+                    <div class="tag" onclick="showEnvContent('mac')">macOS</div>
+                    <div class="tag" onclick="showEnvContent('linux')">Linux</div>
+                </div>
+
+                <div id="windows" class="content-panel active">
+                    <h4>🔥 Windows + WSL2 セットアップ（推奨）</h4>
+                    
+                    <div class="warning">
+                        <strong>Windows直接インストールはNG！</strong><br>
+                        文字化け、パッケージエラー、パフォーマンス問題が頻発します
+                    </div>
+
+                    <h5>ステップ1: WSL2 + Ubuntu のインストール</h5>
+                    <div class="code-box">
+                        <pre>
+# PowerShell を管理者権限で実行
+wsl --install -d Ubuntu
+
+# 再起動後、Ubuntuを起動してユーザー作成
+# ユーザー名とパスワードを設定
+                        </pre>
+                    </div>
+
+                    <h5>ステップ2: Ubuntu内でRuby環境構築</h5>
+                    <div class="code-box">
+                        <pre>
+# Ubuntuターミナルで実行
+sudo apt update
+sudo apt upgrade -y
+
+# 必要なパッケージをインストール
+sudo apt install -y curl git build-essential libssl-dev libreadline-dev zlib1g-dev
+
+# rbenv（Rubyバージョン管理）をインストール
+curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash
+
+# パスを通す
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+source ~/.bashrc
+
+# Ruby 3.4.0 をインストール
+rbenv install 3.4.0
+rbenv global 3.4.0
+
+# 確認
+ruby --version
+gem --version
+                        </pre>
+                    </div>
+
+                    <h5>ステップ3: VS Code + WSL拡張機能</h5>
+                    <div class="code-box">
+                        <pre>
+# 1. VS Code をWindows にインストール
+# https://code.visualstudio.com/
+
+# 2. 以下の拡張機能をインストール：
+#    - WSL (Microsoft)
+#    - Ruby LSP (shopify)
+#    - Ruby Solargraph (castwide)
+
+# 3. WSL内のプロジェクトフォルダで：
+code .
+                        </pre>
+                    </div>
+
+                    <div class="tip">
+                        <strong>WSL2の利点：</strong><br>
+                        • Linux環境でネイティブ動作<br>
+                        • Windows上のVS Codeから直接編集<br>
+                        • ファイルシステムの互換性問題なし<br>
+                        • 本番環境に近い開発体験
+                    </div>
+                </div>
+
+                <div id="mac" class="content-panel">
+                    <h4>🍎 macOS セットアップ</h4>
+                    
+                    <h5>Homebrew経由でのインストール（推奨）</h5>
+                    <div class="code-box">
+                        <pre>
+# Homebrewがない場合はインストール
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# rbenvでRubyを管理
+brew install rbenv ruby-build
+
+# パスを通す
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.zshrc
+echo 'eval "$(rbenv init -)"' >> ~/.zshrc
+source ~/.zshrc
+
+# Ruby 3.4.0 をインストール
+rbenv install 3.4.0
+rbenv global 3.4.0
+
+# Git & VS Code
+brew install git
+brew install --cask visual-studio-code
+
+# 確認
+ruby --version
+git --version
+                        </pre>
+                    </div>
+                </div>
+
+                <div id="linux" class="content-panel">
+                    <h4>🐧 Linux セットアップ</h4>
+                    
+                    <div class="code-box">
+                        <pre>
+# Ubuntu/Debian系
+sudo apt update
+sudo apt install -y curl git build-essential libssl-dev libreadline-dev zlib1g-dev
+
+# rbenvインストール
+curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash
+
+# パスを通す
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+source ~/.bashrc
+
+# Ruby 3.4.0 をインストール
+rbenv install 3.4.0
+rbenv global 3.4.0
+
+# VS Code（Snap版）
+sudo snap install code --classic
+                        </pre>
+                    </div>
+                </div>
+
+                <h3>✅ セットアップ完了チェック</h3>
+                <div class="code-box">
+                    <pre>
+# これらのコマンドが正常に動作すればOK
+ruby --version    # Ruby 3.4.0
+gem --version     # RubyGems のバージョン
+git --version     # Git のバージョン
+code --version    # VS Code のバージョン
+
+# Hello World で動作確認
+echo "puts 'Hello, Ruby!'" > hello.rb
+ruby hello.rb
+                    </pre>
+                </div>
+
+                <div class="important">
+                    <strong>トラブル時の対処法：</strong><br>
+                    • Windows: WSL2が正しく有効化されているか確認<br>
+                    • macOS: Command Line Tools がインストール済みか確認<br>
+                    • 全OS: rbenv の PATH設定が正しいか確認
+                </div>
+                
+                <div class="concept-box">
+                    <h3>なぜRubyを学ぶべきか？</h3>
+                    <p><strong>「手を動かしながら学ぶのが一番！」</strong></p>
+                    <p>環境が整ったので、今度はRubyの素晴らしさを理解しましょう。Rubyは「プログラマーの幸福」を最優先に設計された言語です。</p>
+                </div>
+                
+                <div class="concept-box">
+                    <h3>Rubyの設計思想</h3>
+                    <p><strong>「美しさはシンプルさと力強さの中にある」</strong></p>
+                    <ul>
+                        <li>🎯 <strong>プログラマーの幸福</strong>を最優先</li>
+                        <li>📖 <strong>自然な読みやすさ</strong>を重視</li>
+                        <li>⚡ <strong>高い生産性</strong>を実現</li>
+                        <li>🌈 <strong>表現の自由度</strong>が高い</li>
+                    </ul>
+                </div>
+
+                <h3>Rubyが愛される理由</h3>
+                <div class="example-box">
+                    <h4>🚀 他言語との比較</h4>
+                    <div class="code-box">
+                        <pre>
+# Java（冗長）
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+
+# Ruby（簡潔）
+puts "Hello, World!"
+
+# 配列の操作
+# Java
+for(int i = 0; i < numbers.length; i++) {
+    if(numbers[i] % 2 == 0) {
+        System.out.println(numbers[i] * 2);
+    }
+}
+
+# Ruby（読みやすい）
+numbers.select(&:even?).map { |n| n * 2 }.each { |n| puts n }
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="official-resource" id="getting-started">
+                    <h3>📚 公式学習リソース</h3>
+                    <ul>
+                        <li><strong><a href="https://try.ruby-lang.org/" target="_blank">Try Ruby</a></strong> - 30分でRubyをマスター</li>
+                        <li><strong><a href="https://www.ruby-lang.org/ja/documentation/" target="_blank">公式ドキュメント</a></strong> - 詳細な文法リファレンス</li>
+                        <li><strong>20分ではじめるRuby</strong> - クイックスタートガイド</li>
+                        <li><strong>他言語からのRuby入門</strong> - 経験者向け移行ガイド</li>
+                    </ul>
+                    
+                    <div class="tip">
+                        <strong>推奨学習ステップ：</strong><br>
+                        1. Try Rubyで体験 → 2. 基本文法を学習 → 3. 小さなプログラムを作成 → 4. Railsに挑戦
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button onclick="showMainContent('ruby-syntax')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                        次へ →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ruby文法 -->
+        <div id="ruby-syntax" class="content-section">
+            <div class="section" id="syntax-basics">
+                <h2>💎 Ruby文法完全リファレンス</h2>
+                
+                <div class="tag-selector">
+                    <div class="tag active" onclick="showRubyContent('variables')">変数・定数</div>
+                    <div class="tag" onclick="showRubyContent('methods')">メソッド</div>
+                    <div class="tag" onclick="showRubyContent('blocks')">ブロック・イテレータ</div>
+                    <div class="tag" onclick="showRubyContent('classes')">クラス・モジュール</div>
+                    <div class="tag" onclick="showRubyContent('collections')">配列・ハッシュ</div>
+                    <div class="tag" onclick="showRubyContent('symbols')">シンボル</div>
+                    <div class="tag" onclick="showRubyContent('control')">制御構文</div>
+                    <div class="tag" onclick="showRubyContent('advanced-ruby')">応用技術</div>
+                </div>
+
+                <div id="variables" class="content-panel active">
+                    <h4>変数・定数の完全ガイド</h4>
+                    <div class="code-box">
+                        <pre>
+# ローカル変数（小文字またはアンダースコア始まり）
+name = "太郎"
+age = 25
+user_name = "taro"
+
+# インスタンス変数（@で始まる）
+class User
+  def initialize(name)
+    @name = name  # インスタンス変数
+  end
+  
+  def greet
+    "Hello, #{@name}!"  # 他のメソッドからもアクセス可能
+  end
+end
+
+# クラス変数（@@で始まる）
+class User
+  @@count = 0  # クラス変数
+  
+  def initialize(name)
+    @name = name
+    @@count += 1
+  end
+  
+  def self.total_users
+    @@count
+  end
+end
+
+# 定数（大文字で始まる）
+MAX_USERS = 100
+API_ENDPOINT = "https://api.example.com"
+
+# グローバル変数（$で始まる） ※非推奨
+$global_var = "避けるべき"
+
+# 多重代入（便利な機能）
+a, b, c = [1, 2, 3]           # a=1, b=2, c=3
+first, *rest = [1, 2, 3, 4]   # first=1, rest=[2,3,4]
+x, y = y, x                   # 値の交換
+
+# 範囲（Range）
+(1..10).each { |i| puts i }   # 1から10まで（10を含む）
+(1...10).each { |i| puts i }  # 1から10未満（10を含まない）
+                        </pre>
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>命名規則：</strong><br>
+                        • 変数・メソッド：snake_case<br>
+                        • 定数・クラス：UPPER_CASE / PascalCase<br>
+                        • 述語メソッド：末尾に?<br>
+                        • 破壊的メソッド：末尾に!
+                    </div>
+                </div>
+
+                <div id="methods" class="content-panel">
+                    <h4>メソッド定義の全パターン</h4>
+                    <div class="code-box">
+                        <pre>
+# 基本的なメソッド
+def greet(name)
+  "Hello, #{name}!"
+end
+
+# デフォルト引数
+def greet(name = "World")
+  "Hello, #{name}!"
+end
+
+# キーワード引数（Ruby 2.0+）
+def create_user(name:, email:, age: 20)
+  { name: name, email: email, age: age }
+end
+
+# 必須キーワード引数（Ruby 2.1+）
+def login(email:, password:)
+  # email と password は必須
+end
+
+# 可変長引数
+def sum(*numbers)
+  numbers.sum
+end
+
+def info(name, *hobbies, **details)
+  puts "Name: #{name}"
+  puts "Hobbies: #{hobbies.join(', ')}"
+  puts "Details: #{details}"
+end
+
+# 使用例
+info("太郎", "読書", "映画", age: 25, city: "東京")
+
+# ブロックを受け取るメソッド
+def with_timing
+  start_time = Time.now
+  result = yield  # ブロックを実行
+  puts "実行時間: #{Time.now - start_time}秒"
+  result
+end
+
+# 使用例
+with_timing do
+  sleep(1)
+  "完了しました"
+end
+
+# 述語メソッド（真偽値を返す）
+def admin?
+  @role == 'admin'
+end
+
+def empty?
+  @items.nil? || @items.empty?
+end
+
+# 破壊的メソッド（オブジェクトを変更）
+def upcase!
+  @name = @name.upcase
+end
+
+# エイリアス
+alias_method :hello, :greet
+                        </pre>
+                    </div>
+                </div>
+
+                <div id="blocks" class="content-panel">
+                    <h4>ブロック・イテレータ・Proc</h4>
+                    <div class="code-box">
+                        <pre>
+# ブロックの基本形
+[1, 2, 3].each do |num|
+  puts num * 2
+end
+
+# 1行の場合は {} を使用（慣習）
+[1, 2, 3].each { |num| puts num * 2 }
+
+# よく使うイテレータ
+numbers = [1, 2, 3, 4, 5]
+
+# map: 変換
+squared = numbers.map { |n| n ** 2 }  # [1, 4, 9, 16, 25]
+
+# select: フィルタリング
+evens = numbers.select { |n| n.even? }  # [2, 4]
+
+# reject: 除外
+odds = numbers.reject { |n| n.even? }   # [1, 3, 5]
+
+# find: 最初にマッチするもの
+first_even = numbers.find { |n| n.even? }  # 2
+
+# reduce/inject: 畳み込み
+total = numbers.reduce(0) { |sum, n| sum + n }  # 15
+total = numbers.sum  # 上記の短縮形
+
+# each_with_index: インデックス付き
+["a", "b", "c"].each_with_index do |char, index|
+  puts "#{index}: #{char}"
+end
+
+# Proc オブジェクト
+doubler = Proc.new { |x| x * 2 }
+tripler = proc { |x| x * 3 }  # proc は Proc.new の省略形
+
+numbers.map(&doubler)  # [2, 4, 6, 8, 10]
+
+# Lambda
+multiply = ->(x, y) { x * y }
+multiply.call(3, 4)  # 12
+
+# Symbol to Proc（魔法の記法）
+["apple", "banana"].map(&:upcase)  # ["APPLE", "BANANA"]
+[1, 2, 3].map(&:to_s)              # ["1", "2", "3"]
+
+# with_index
+["a", "b", "c"].map.with_index { |char, i| "#{i}:#{char}" }
+
+# チェインメソッド
+result = [1, 2, 3, 4, 5]
+  .select(&:even?)      # [2, 4]
+  .map { |n| n * 3 }    # [6, 12]
+  .sum                  # 18
+                        </pre>
+                    </div>
+                    
+                    <div class="important">
+                        <strong>ブロック vs Proc vs Lambda：</strong><br>
+                        • ブロック：メソッドに渡す処理の塊<br>
+                        • Proc：ブロックをオブジェクト化<br>
+                        • Lambda：より厳密なProc（引数チェックあり）
+                    </div>
+                </div>
+
+                <div id="classes" class="content-panel">
+                    <h4>クラス・モジュールの設計</h4>
+                    <div class="code-box">
+                        <pre>
+# 基本的なクラス
+class User
+  # アクセサーメソッド
+  attr_reader :name      # getter のみ
+  attr_writer :email     # setter のみ
+  attr_accessor :age     # getter と setter
+
+  # クラス変数
+  @@user_count = 0
+
+  # 初期化メソッド
+  def initialize(name, email)
+    @name = name
+    @email = email
+    @created_at = Time.now
+    @@user_count += 1
+  end
+
+  # インスタンスメソッド
+  def introduce
+    "私は#{@name}です。#{@email}でご連絡ください。"
+  end
+
+  def age_in_days
+    (Time.now - @created_at) / (24 * 60 * 60)
+  end
+
+  # クラスメソッド
+  def self.total_count
+    @@user_count
+  end
+
+  def self.create_guest
+    new("ゲスト", "guest@example.com")
+  end
+
+  # プライベートメソッド
+  private
+
+  def validate_email
+    @email.include?('@')
+  end
+
+  def format_name
+    @name.strip.capitalize
+  end
+end
+
+# 継承
+class AdminUser < User
+  def initialize(name, email, permissions = [])
+    super(name, email)  # 親のinitializeを呼び出し
+    @permissions = permissions
+  end
+
+  def can?(action)
+    @permissions.include?(action)
+  end
+
+  # メソッドのオーバーライド
+  def introduce
+    "管理者の#{@name}です。"
+  end
+end
+
+# モジュール（Mix-in）
+module Loggable
+  def log(message)
+    puts "[#{Time.now}] #{self.class}: #{message}"
+  end
+
+  def debug(message)
+    log("DEBUG: #{message}") if ENV['DEBUG']
+  end
+end
+
+module Comparable
+  def <=>(other)
+    self.score <=> other.score
+  end
+end
+
+class Player
+  include Loggable     # インスタンスメソッドとして追加
+  include Comparable   # 比較可能にする
+
+  attr_accessor :name, :score
+
+  def initialize(name, score)
+    @name = name
+    @score = score
+  end
+end
+
+# extend（クラスメソッドとして追加）
+class Logger
+  extend Loggable
+end
+
+Logger.log("アプリケーション開始")  # クラスメソッドとして使用
+
+# 特異メソッド（オブジェク個別のメソッド）
+user = User.new("太郎", "taro@example.com")
+def user.special_greeting
+  "特別な#{@name}です！"
+end
+                        </pre>
+                    </div>
+                </div>
+
+                <div id="collections" class="content-panel">
+                    <h4>配列・ハッシュ完全操作ガイド</h4>
+                    <div class="code-box">
+                        <pre>
+# 配列の作成と基本操作
+arr = [1, 2, 3, 4, 5]
+arr = Array.new(5, 0)        # [0, 0, 0, 0, 0]
+arr = Array(1..5)            # [1, 2, 3, 4, 5]
+
+# 要素の追加・削除
+arr << 6                     # 末尾に追加
+arr.push(7, 8)              # 複数追加
+arr.unshift(0)              # 先頭に追加
+arr.insert(2, 'inserted')    # 指定位置に挿入
+
+last = arr.pop              # 末尾から削除して取得
+first = arr.shift           # 先頭から削除して取得
+arr.delete_at(2)            # 指定位置を削除
+arr.delete('inserted')       # 指定値を削除
+
+# 便利なメソッド
+arr.first                   # 最初の要素
+arr.last                    # 最後の要素
+arr.sample                  # ランダムな要素
+arr.shuffle                 # シャッフルした新しい配列
+arr.reverse                 # 逆順の新しい配列
+arr.sort                    # ソートした新しい配列
+arr.uniq                    # 重複を除いた新しい配列
+
+# 配列の検索・判定
+arr.include?(3)             # 要素が含まれるか
+arr.index(3)                # 要素のインデックス
+arr.empty?                  # 空かどうか
+arr.length                  # 要素数（arr.size でも同じ）
+
+# ハッシュの作成と操作
+hash = { name: "太郎", age: 25 }
+hash = Hash.new("default")   # デフォルト値付き
+
+# アクセス方法
+hash[:name]                 # シンボルキー
+hash["name"]                # 文字列キー（別のキー扱い）
+hash.fetch(:name, "unknown") # デフォルト値付きアクセス
+
+# 要素の追加・更新・削除
+hash[:city] = "東京"         # 追加
+hash[:age] = 26             # 更新
+hash.store(:hobby, "読書")   # store メソッド
+hash.delete(:age)           # 削除
+
+# 便利なメソッド
+hash.keys                   # キーの配列
+hash.values                 # 値の配列
+hash.has_key?(:name)        # キーの存在確認
+hash.has_value?("太郎")      # 値の存在確認
+hash.empty?                 # 空かどうか
+hash.length                 # 要素数
+
+# マージ
+other = { job: "エンジニア", city: "大阪" }
+hash.merge(other)           # 新しいハッシュを返す
+hash.merge!(other)          # 破壊的マージ
+
+# イテレーション
+hash.each { |key, value| puts "#{key}: #{value}" }
+hash.each_key { |key| puts key }
+hash.each_value { |value| puts value }
+
+# 変換
+hash.to_a                   # [[key, value], ...] の配列
+hash.invert                 # キーと値を入れ替え
+
+# ネストしたハッシュ
+nested = {
+  user: {
+    name: "太郎",
+    profile: {
+      age: 25,
+      hobbies: ["読書", "映画"]
+    }
+  }
+}
+
+# dig メソッドで安全にアクセス（Ruby 2.3+）
+age = nested.dig(:user, :profile, :age)  # 25
+missing = nested.dig(:user, :missing, :key)  # nil（エラーにならない）
+                        </pre>
+                    </div>
+                </div>
+
+                <div id="symbols" class="content-panel">
+                    <h4>シンボル完全理解</h4>
+                    <div class="code-box">
+                        <pre>
+# シンボルとは？
+# - 不変な識別子（文字列のようなもの）
+# - 同じシンボルは常に同一オブジェクト
+# - メモリ効率が良い
+# - ハッシュのキーに最適
+
+# 文字列との違い
+"hello".object_id    # 毎回異なるID
+"hello".object_id    # 毎回異なるID
+
+:hello.object_id     # 常に同じID
+:hello.object_id     # 常に同じID
+
+# シンボルの作成方法
+:symbol              # 基本形
+:"with spaces"       # スペースを含む
+:"#{variable}"       # 動的生成（非推奨）
+
+# よく使われる場面
+# 1. ハッシュのキー
+user = { 
+  name: "太郎",      # :name => "太郎" と同じ
+  age: 25,           # :age => 25 と同じ
+  email: "taro@example.com"
+}
+
+# 2. メソッドの引数
+attr_accessor :name, :email, :age
+validates :email, presence: true, uniqueness: true
+
+# 3. 状態の表現
+status = :active     # :pending, :inactive など
+
+case status
+when :active
+  "利用中"
+when :pending
+  "保留中"
+when :inactive
+  "停止中"
+end
+
+# 4. メタプログラミング
+class User
+  [:name, :email, :age].each do |attr|
+    define_method(attr) do
+      instance_variable_get("@#{attr}")
+    end
+    
+    define_method("#{attr}=") do |value|
+      instance_variable_set("@#{attr}", value)
+    end
+  end
+end
+
+# 相互変換
+:symbol.to_s         # "symbol"
+"string".to_sym      # :string
+"string".intern      # :string（to_sym のエイリアス）
+
+# Symbol#to_proc の魔法
+["apple", "banana", "cherry"].map(&:upcase)
+# 上記は下記と同じ意味
+["apple", "banana", "cherry"].map { |str| str.upcase }
+
+# 数値でも動作
+[1, 2, 3].map(&:to_s)        # ["1", "2", "3"]
+[1.5, 2.7, 3.9].map(&:to_i)  # [1, 2, 3]
+
+# チェーンも可能
+["  hello  ", "  world  "].map(&:strip).map(&:capitalize)
+# ["Hello", "World"]
+
+# 注意点：メモリリーク
+# 動的にシンボルを大量生成するとGCされないので注意
+user_input = "dynamic_symbol"
+user_input.to_sym  # 悪い例：ユーザー入力からシンボル生成
+
+# 良い例：事前定義されたシンボルを使用
+VALID_STATUSES = [:active, :inactive, :pending].freeze
+status = :active if VALID_STATUSES.include?(:active)
+                        </pre>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>シンボルの注意点：</strong><br>
+                        動的にシンボルを大量作成するとメモリリークの原因になります。<br>
+                        ユーザー入力から直接シンボルを作らないよう注意！
+                    </div>
+                </div>
+
+                <div id="control" class="content-panel">
+                    <h4>制御構文の全パターン</h4>
+                    <div class="code-box">
+                        <pre>
+# if文の各種形式
+if condition
+  # 処理
+elsif other_condition
+  # 処理
+else
+  # 処理
+end
+
+# 後置if（修飾子）
+puts "Hello" if greeting_enabled
+return false unless valid?
+
+# 三項演算子
+result = condition ? "真" : "偽"
+status = user.active? ? "アクティブ" : "非アクティブ"
+
+# unless（if の逆）
+unless user.admin?
+  redirect_to root_path
+end
+
+# case文
+case status
+when "draft"
+  "下書き"
+when "published", "public"  # 複数条件
+  "公開中"
+when /^archived/            # 正規表現
+  "アーカイブ"
+else
+  "不明"
+end
+
+# case で範囲を使用
+case score
+when 0...60
+  "不可"
+when 60...70
+  "可"
+when 70...80
+  "良"
+when 80..100
+  "優"
+else
+  "範囲外"
+end
+
+# while ループ
+i = 0
+while i < 10
+  puts i
+  i += 1
+end
+
+# until ループ（while の逆）
+i = 0
+until i >= 10
+  puts i
+  i += 1
+end
+
+# for ループ（あまり使わない）
+for i in 1..10
+  puts i
+end
+
+# break と next
+(1..10).each do |i|
+  next if i.even?  # continue相当
+  break if i > 7   # break
+  puts i
+end
+
+# イテレータ系（よく使う）
+5.times do |i|
+  puts i  # 0から4まで
+end
+
+1.upto(5) { |i| puts i }      # 1から5まで
+5.downto(1) { |i| puts i }    # 5から1まで
+
+# step
+1.step(10, 2) { |i| puts i }  # 1, 3, 5, 7, 9
+
+# loop（無限ループ）
+loop do
+  input = gets.chomp
+  break if input == "exit"
+  puts "入力: #{input}"
+end
+
+# 例外処理
+begin
+  # 危険な処理
+  file = File.open("nonexistent.txt")
+rescue Errno::ENOENT => e
+  puts "ファイルが見つかりません: #{e.message}"
+rescue StandardError => e
+  puts "エラーが発生しました: #{e.message}"
+else
+  # 例外が発生しなかった場合
+  puts "ファイル読み込み成功"
+ensure
+  # 必ず実行される
+  file&.close
+  puts "処理完了"
+end
+
+# raise で例外を発生
+def divide(a, b)
+  raise ArgumentError, "ゼロ除算はできません" if b.zero?
+  a / b
+end
+
+# カスタム例外
+class MyCustomError < StandardError; end
+
+def risky_operation
+  raise MyCustomError, "カスタムエラーが発生"
+end
+                        </pre>
+                    </div>
+                </div>
+
+                <div id="advanced-ruby" class="content-panel">
+                    <h4>Ruby応用技術</h4>
+                    <div class="code-box">
+                        <pre>
+# メタプログラミング基礎
+class User
+  # 動的メソッド定義
+  [:name, :email, :age].each do |attr|
+    define_method(attr) do
+      instance_variable_get("@#{attr}")
+    end
+    
+    define_method("#{attr}=") do |value|
+      instance_variable_set("@#{attr}", value)
+    end
+  end
+end
+
+# method_missing（存在しないメソッドの処理）
+class DynamicAccessor
+  def initialize(data)
+    @data = data
+  end
+  
+  def method_missing(method_name, *args, &block)
+    if @data.key?(method_name)
+      @data[method_name]
+    elsif method_name.to_s.end_with?('=')
+      attr_name = method_name.to_s.chomp('=').to_sym
+      @data[attr_name] = args.first
+    else
+      super
+    end
+  end
+  
+  def respond_to_missing?(method_name, include_private = false)
+    @data.key?(method_name) || method_name.to_s.end_with?('=') || super
+  end
+end
+
+user = DynamicAccessor.new({})
+user.name = "太郎"
+puts user.name  # "太郎"
+
+# send（メソッドを動的実行）
+class Calculator
+  def add(a, b)
+    a + b
+  end
+  
+  def multiply(a, b)
+    a * b
+  end
+end
+
+calc = Calculator.new
+operation = "add"
+result = calc.send(operation, 5, 3)  # 8
+
+# const_get（定数を動的取得）
+class_name = "String"
+klass = Object.const_get(class_name)  # String クラス
+instance = klass.new("Hello")
+
+# eval系（注意して使用）
+code = "puts 'Hello from eval'"
+eval(code)  # 文字列をRubyコードとして実行
+
+# instance_eval（オブジェクトのコンテキストで実行）
+user = User.new("太郎")
+user.instance_eval do
+  @secret = "秘密の情報"
+  puts @name  # "太郎"
+end
+
+# class_eval（クラスのコンテキストで実行）
+User.class_eval do
+  def special_method
+    "特別なメソッド"
+  end
+end
+
+# Module#prepend（メソッドの前に割り込み）
+module Loggable
+  def save
+    puts "保存前処理"
+    super  # 元のメソッドを呼び出し
+    puts "保存後処理"
+  end
+end
+
+class User
+  prepend Loggable  # include より先に実行される
+  
+  def save
+    puts "実際の保存処理"
+  end
+end
+
+User.new.save
+# 出力:
+# 保存前処理
+# 実際の保存処理
+# 保存後処理
+
+# Refinements（限定的な拡張）
+module StringExtensions
+  refine String do
+    def palindrome?
+      self == self.reverse
+    end
+  end
+end
+
+class PalindromeChecker
+  using StringExtensions  # このクラス内でのみ有効
+  
+  def check(str)
+    str.palindrome?
+  end
+end
+
+# Fiber（軽量スレッド）
+fiber = Fiber.new do
+  puts "Fiber開始"
+  Fiber.yield "一時停止"
+  puts "Fiber再開"
+  "終了"
+end
+
+puts fiber.resume  # "Fiber開始" と "一時停止" が出力
+puts fiber.resume  # "Fiber再開" と "終了" が出力
+
+# Enumerator（遅延評価）
+enum = (1..Float::INFINITY).lazy
+         .select(&:even?)
+         .map { |n| n * 2 }
+         .first(10)  # 最初の10個だけ評価
+
+puts enum  # [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]
+                        </pre>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>メタプログラミングの注意点：</strong><br>
+                        • eval系は特にセキュリティリスクが高い<br>
+                        • method_missing は respond_to_missing? とセットで定義<br>
+                        • 過度な動的プログラミングはデバッグを困難にする
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rails基礎 -->
+        <div id="rails-basics" class="content-section">
+            <div class="section" id="rails-intro">
+                <h2>🚄 Rails入門 - Webフレームワークの世界</h2>
+                
+                <div class="concept-box">
+                    <h3>Railsとは？</h3>
+                    <p><strong>Ruby on Rails</strong> = 高速なWebアプリケーション開発のためのフレームワーク</p>
+                    <ul>
+                        <li>🍛 <strong>カレーのルー</strong>のような存在（基本機能は用意済み）</li>
+                        <li>📋 <strong>設定より規約</strong>（Convention over Configuration）</li>
+                        <li>🔄 <strong>DRY原則</strong>（Don't Repeat Yourself）</li>
+                        <li>🎯 <strong>RESTful設計</strong>を標準サポート</li>
+                    </ul>
+                </div>
+
+                <div class="example-box">
+                    <h4>🍛 フレームワークの比喩</h4>
+                    <p><strong>カレーを作るとき</strong></p>
+                    <div class="pros-cons">
+                        <div class="cons">
+                            <h5>❌ スパイスから調合（フレームワークなし）</h5>
+                            <ul>
+                                <li>自由度は高い</li>
+                                <li>時間がかかる</li>
+                                <li>失敗のリスク</li>
+                                <li>毎回同じ作業</li>
+                            </ul>
+                        </div>
+                        <div class="pros">
+                            <h5>✅ 市販のルー（Rails）</h5>
+                            <ul>
+                                <li>手順が確立されている</li>
+                                <li>誰でもおいしく作れる</li>
+                                <li>基本の味は保証済み</li>
+                                <li>具材（アイデア）に集中</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Railsの基本構造</h3>
+                <div class="code-box">
+                    <pre>
+myapp/
+├── app/              ← メインのコード
+│   ├── controllers/  ← リクエスト処理
+│   ├── models/       ← データ・ビジネスロジック
+│   ├── views/        ← 画面テンプレート
+│   └── assets/       ← CSS、JavaScript、画像
+├── config/           ← 設定ファイル
+│   ├── routes.rb     ← URL設計
+│   └── database.yml  ← DB設定
+├── db/               ← データベース関連
+│   └── migrate/      ← DB構造の変更履歴
+├── public/           ← 静的ファイル
+└── Gemfile           ← 使用ライブラリ一覧
+                    </pre>
+                </div>
+
+                <h3>よく触るファイル TOP5</h3>
+                <table>
+                    <tr>
+                        <th>ファイル/フォルダ</th>
+                        <th>役割</th>
+                        <th>使用頻度</th>
+                        <th>重要度</th>
+                    </tr>
+                    <tr>
+                        <td><code>app/controllers/</code></td>
+                        <td>処理ロジック</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td><span class="badge beginner-badge">必須</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>app/views/</code></td>
+                        <td>画面デザイン</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td><span class="badge beginner-badge">必須</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>config/routes.rb</code></td>
+                        <td>URL設定</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td><span class="badge beginner-badge">必須</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>app/models/</code></td>
+                        <td>データ構造</td>
+                        <td>⭐⭐⭐</td>
+                        <td><span class="badge">重要</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>db/migrate/</code></td>
+                        <td>DB構造変更</td>
+                        <td>⭐⭐⭐</td>
+                        <td><span class="badge">重要</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>💎 Gem・Bundler完全理解</h2>
+                
+                <div class="concept-box">
+                    <h3>Gem（ジェム）とは？</h3>
+                    <p><strong>Gem = Rubyのパッケージ管理システム</strong></p>
+                    <ul>
+                        <li>📦 <strong>ライブラリ</strong>をパッケージ化したもの</li>
+                        <li>🌐 <strong>RubyGems.org</strong>から配布</li>
+                        <li>⚡ <strong>機能拡張</strong>を簡単に追加</li>
+                        <li>🔄 <strong>依存関係</strong>を自動解決</li>
+                    </ul>
+                </div>
+
+                <div class="example-box">
+                    <h4>🏪 Gemの比喩</h4>
+                    <p><strong>アプリストアのようなもの</strong></p>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h5>✅ メリット</h5>
+                            <ul>
+                                <li>必要な機能をすぐに追加</li>
+                                <li>車輪の再発明を避ける</li>
+                                <li>コミュニティで検証済み</li>
+                                <li>アップデートが簡単</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h5>⚠️ 注意点</h5>
+                            <ul>
+                                <li>依存関係が複雑になる場合</li>
+                                <li>セキュリティリスク考慮必要</li>
+                                <li>メンテナンス状況の確認必要</li>
+                                <li>バージョン競合の可能性</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Bundler（バンドラー）の役割</h3>
+                <div class="concept-box">
+                    <strong>Bundler = Gemの依存関係管理ツール</strong><br>
+                    • プロジェクト毎にGemのバージョンを固定<br>
+                    • チーム開発で環境を統一<br>
+                    • 本番環境との整合性を保証
+                </div>
+
+                <h3>Gemfile & Gemfile.lock</h3>
+                <div class="flow-chart">
+                    <div><strong>Gemfile</strong></div>
+                    <div style="font-size: 0.9rem;">使いたいGemを記述（人間が編集）</div>
+                    <span class="flow-arrow">↓ bundle install</span>
+                    
+                    <div><strong>Gemfile.lock</strong></div>
+                    <div style="font-size: 0.9rem;">実際にインストールされたバージョンを記録（自動生成）</div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div><strong>統一された環境</strong></div>
+                    <div style="font-size: 0.9rem;">どこでも同じバージョンが使用される</div>
+                </div>
+
+                <h4>Gemfileの書き方</h4>
+                <div class="code-box">
+                    <pre>
+# Gemfile
+source "https://rubygems.org"
+
+# Ruby バージョン指定
+ruby "3.2.0"
+
+# 必須のGem
+gem "rails", "~> 7.1.0"        # バージョン範囲指定
+gem "sqlite3", "~> 1.4"        # 開発・テスト用DB
+gem "puma", ">= 5.0"           # Webサーバー
+
+# アセット関連
+gem "sassc-rails"              # Sass
+gem "image_processing", "~> 1.2"  # 画像加工
+
+# 開発環境でのみ使用
+group :development do
+  gem "web-console"            # デバッグコンソール
+  gem "listen", "~> 3.3"       # ファイル変更監視
+  gem "spring"                 # 高速化
+end
+
+# テスト環境でのみ使用
+group :test do
+  gem "capybara"               # 統合テスト
+  gem "selenium-webdriver"     # ブラウザテスト
+end
+
+# 開発とテスト環境
+group :development, :test do
+  gem "debug", platforms: %i[ mri mingw x64_mingw ]  # デバッガー
+  gem "rspec-rails"            # テストフレームワーク
+  gem "factory_bot_rails"      # テストデータ生成
+end
+
+# 本番環境でのみ使用
+group :production do
+  gem "pg"                     # PostgreSQL
+  gem "redis"                  # キャッシュ・セッション
+end
+
+# プラットフォーム指定
+gem "bootsnap", ">= 1.4.4", require: false
+gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+                    </pre>
+                </div>
+
+                <h3>バージョン指定の方法</h3>
+                <table>
+                    <tr>
+                        <th>指定方法</th>
+                        <th>意味</th>
+                        <th>例</th>
+                        <th>マッチするバージョン</th>
+                    </tr>
+                    <tr>
+                        <td><code>gem "rails"</code></td>
+                        <td>最新版</td>
+                        <td>-</td>
+                        <td>常に最新</td>
+                    </tr>
+                    <tr>
+                        <td><code>gem "rails", "7.1.0"</code></td>
+                        <td>完全一致</td>
+                        <td>7.1.0</td>
+                        <td>7.1.0のみ</td>
+                    </tr>
+                    <tr>
+                        <td><code>gem "rails", "~> 7.1.0"</code></td>
+                        <td>マイナー固定</td>
+                        <td>7.1.x</td>
+                        <td>7.1.0〜7.1.x</td>
+                    </tr>
+                    <tr>
+                        <td><code>gem "rails", ">= 7.0"</code></td>
+                        <td>以上</td>
+                        <td>7.0以上</td>
+                        <td>7.0, 7.1, 8.0...</td>
+                    </tr>
+                    <tr>
+                        <td><code>gem "rails", "< 8.0"</code></td>
+                        <td>未満</td>
+                        <td>8.0未満</td>
+                        <td>7.x系まで</td>
+                    </tr>
+                </table>
+
+                <h3>よく使うBundlerコマンド</h3>
+                <table>
+                    <tr>
+                        <th>コマンド</th>
+                        <th>動作</th>
+                        <th>いつ使う？</th>
+                    </tr>
+                    <tr>
+                        <td><code>bundle install</code></td>
+                        <td>Gemをインストール</td>
+                        <td>初回セットアップ・Gemfile変更後</td>
+                    </tr>
+                    <tr>
+                        <td><code>bundle update</code></td>
+                        <td>Gemを最新版に更新</td>
+                        <td>定期的なアップデート</td>
+                    </tr>
+                    <tr>
+                        <td><code>bundle exec</code></td>
+                        <td>指定バージョンで実行</td>
+                        <td>コマンド実行時</td>
+                    </tr>
+                    <tr>
+                        <td><code>bundle add</code></td>
+                        <td>新しいGemを追加</td>
+                        <td>機能追加時</td>
+                    </tr>
+                    <tr>
+                        <td><code>bundle remove</code></td>
+                        <td>Gemを削除</td>
+                        <td>不要なGem削除時</td>
+                    </tr>
+                </table>
+
+                <h3>人気Gem紹介</h3>
+                <div class="tag-selector">
+                    <div class="tag active" onclick="showGemContent('essential')">必須系</div>
+                    <div class="tag" onclick="showGemContent('database')">データベース</div>
+                    <div class="tag" onclick="showGemContent('authentication')">認証・認可</div>
+                    <div class="tag" onclick="showGemContent('testing')">テスト</div>
+                    <div class="tag" onclick="showGemContent('ui')">UI・CSS</div>
+                    <div class="tag" onclick="showGemContent('utility')">ユーティリティ</div>
+                </div>
+
+                <div id="essential" class="content-panel active">
+                    <h4>必須系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>rails</strong></td>
+                            <td>フレームワーク本体</td>
+                            <td>Ruby on Rails のコア</td>
+                        </tr>
+                        <tr>
+                            <td><strong>puma</strong></td>
+                            <td>Webサーバー</td>
+                            <td>高速なHTTPサーバー</td>
+                        </tr>
+                        <tr>
+                            <td><strong>bootsnap</strong></td>
+                            <td>起動高速化</td>
+                            <td>Railsアプリの起動時間短縮</td>
+                        </tr>
+                        <tr>
+                            <td><strong>sprockets-rails</strong></td>
+                            <td>アセットパイプライン</td>
+                            <td>CSS/JSファイルの管理</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="database" class="content-panel">
+                    <h4>データベース系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>sqlite3</strong></td>
+                            <td>SQLite</td>
+                            <td>開発用軽量DB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>pg</strong></td>
+                            <td>PostgreSQL</td>
+                            <td>本番環境推奨DB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>mysql2</strong></td>
+                            <td>MySQL</td>
+                            <td>人気のRDB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>redis</strong></td>
+                            <td>Redis</td>
+                            <td>キャッシュ・セッション</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="authentication" class="content-panel">
+                    <h4>認証・認可系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>devise</strong></td>
+                            <td>認証システム</td>
+                            <td>ユーザー登録・ログイン機能</td>
+                        </tr>
+                        <tr>
+                            <td><strong>omniauth</strong></td>
+                            <td>外部認証</td>
+                            <td>Google、GitHub等でログイン</td>
+                        </tr>
+                        <tr>
+                            <td><strong>cancancan</strong></td>
+                            <td>認可システム</td>
+                            <td>ユーザー権限管理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>pundit</strong></td>
+                            <td>認可システム</td>
+                            <td>ポリシーベースの権限管理</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="testing" class="content-panel">
+                    <h4>テスト系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>rspec-rails</strong></td>
+                            <td>テストフレームワーク</td>
+                            <td>BDD形式のテスト</td>
+                        </tr>
+                        <tr>
+                            <td><strong>factory_bot_rails</strong></td>
+                            <td>テストデータ</td>
+                            <td>テスト用オブジェクト生成</td>
+                        </tr>
+                        <tr>
+                            <td><strong>capybara</strong></td>
+                            <td>統合テスト</td>
+                            <td>ブラウザ操作のテスト</td>
+                        </tr>
+                        <tr>
+                            <td><strong>selenium-webdriver</strong></td>
+                            <td>ブラウザ自動化</td>
+                            <td>実ブラウザでのテスト</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="ui" class="content-panel">
+                    <h4>UI・CSS系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>bootstrap</strong></td>
+                            <td>CSSフレームワーク</td>
+                            <td>レスポンシブデザイン</td>
+                        </tr>
+                        <tr>
+                            <td><strong>sassc-rails</strong></td>
+                            <td>Sass</td>
+                            <td>CSS拡張言語</td>
+                        </tr>
+                        <tr>
+                            <td><strong>image_processing</strong></td>
+                            <td>画像処理</td>
+                            <td>リサイズ・圧縮等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>kaminari</strong></td>
+                            <td>ページネーション</td>
+                            <td>ページ分割機能</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="utility" class="content-panel">
+                    <h4>ユーティリティ系Gem</h4>
+                    <table>
+                        <tr>
+                            <th>Gem名</th>
+                            <th>用途</th>
+                            <th>説明</th>
+                        </tr>
+                        <tr>
+                            <td><strong>dotenv-rails</strong></td>
+                            <td>環境変数管理</td>
+                            <td>.env ファイルから読み込み</td>
+                        </tr>
+                        <tr>
+                            <td><strong>sidekiq</strong></td>
+                            <td>バックグラウンドジョブ</td>
+                            <td>非同期処理</td>
+                        </tr>
+                        <tr>
+                            <td><strong>whenever</strong></td>
+                            <td>cron管理</td>
+                            <td>定期実行タスク</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ransack</strong></td>
+                            <td>検索機能</td>
+                            <td>高度な検索・ソート</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="important">
+                    <h4>⚠️ Gem使用時の注意点</h4>
+                    <ul>
+                        <li><strong>セキュリティ</strong>：定期的にアップデートする</li>
+                        <li><strong>メンテナンス</strong>：活発に開発されているかチェック</li>
+                        <li><strong>依存関係</strong>：競合しないか確認</li>
+                        <li><strong>ライセンス</strong>：商用利用可能か確認</li>
+                        <li><strong>サイズ</strong>：アプリの起動時間への影響考慮</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🛠️ Railsコマンド完全ガイド</h2>
+                
+                <h3>なぜコマンドを使うの？</h3>
+                <div class="concept-box">
+                    <strong>Railsの哲学：「繰り返し作業は自動化」</strong><br>
+                    • 手動作成 → ミスが起きやすい<br>
+                    • コマンド生成 → 正しい場所に正しい形式で<br>
+                    • 規約に沿った命名を自動適用
+                </div>
+
+                <h3>基本コマンド</h3>
+                <table>
+                    <tr>
+                        <th>コマンド</th>
+                        <th>用途</th>
+                        <th>使用例</th>
+                    </tr>
+                    <tr>
+                        <td><code>rails new</code></td>
+                        <td>アプリ作成</td>
+                        <td><code>rails new blog</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>rails server</code></td>
+                        <td>サーバー起動</td>
+                        <td><code>rails s</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>rails console</code></td>
+                        <td>対話環境</td>
+                        <td><code>rails c</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>rails generate</code></td>
+                        <td>ファイル生成</td>
+                        <td><code>rails g model User</code></td>
+                    </tr>
+                </table>
+
+                <h3>生成コマンド詳細</h3>
+                <div class="code-box">
+                    <pre>
+# モデル生成（データ構造）
+rails g model Post title:string content:text published:boolean
+# 生成されるもの：
+# - app/models/post.rb
+# - db/migrate/xxx_create_posts.rb
+# - test/models/post_test.rb
+
+# コントローラー生成（処理ロジック）
+rails g controller Posts index show new create edit update destroy
+# 生成されるもの：
+# - app/controllers/posts_controller.rb
+# - app/views/posts/index.html.erb (各アクション分)
+# - app/helpers/posts_helper.rb
+# - test/controllers/posts_controller_test.rb
+
+# スキャフォールド（全部まとめて）
+rails g scaffold Article title:string content:text
+# 生成されるもの：
+# - 上記のモデル + コントローラー
+# - 完全なCRUD機能
+# - routes.rbへの追記
+
+# マイグレーション（DB構造変更）
+rails g migration AddAgeToUsers age:integer
+rails g migration RemoveEmailFromUsers email:string
+rails g migration CreateJoinTableUserPost user post
+                    </pre>
+                </div>
+
+                <h3>データベースコマンド</h3>
+                <table>
+                    <tr>
+                        <th>コマンド</th>
+                        <th>動作</th>
+                        <th>いつ使う？</th>
+                    </tr>
+                    <tr>
+                        <td><code>rails db:create</code></td>
+                        <td>DB作成</td>
+                        <td>プロジェクト開始時</td>
+                    </tr>
+                    <tr>
+                        <td><code>rails db:migrate</code></td>
+                        <td>マイグレーション実行</td>
+                        <td>DB構造変更後</td>
+                    </tr>
+                    <tr>
+                        <td><code>rails db:rollback</code></td>
+                        <td>マイグレーション取り消し</td>
+                        <td>やり直したい時</td>
+                    </tr>
+                    <tr>
+                        <td><code>rails db:seed</code></td>
+                        <td>初期データ投入</td>
+                        <td>サンプルデータが欲しい時</td>
+                    </tr>
+                    <tr>
+                        <td><code>rails db:reset</code></td>
+                        <td>DB完全リセット</td>
+                        <td>最初からやり直したい時</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showMainContent('mvc-deep')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                    次へ →
+                </button>
+            </div>
+        </div>
+
+        <!-- MVC詳解 -->
+        <div id="mvc-deep" class="content-section">
+            <div class="section" id="mvc-pattern">
+                <h2>🍳 MVCパターン完全理解</h2>
+                
+                <div class="concept-box">
+                    <h3>🍛 フレームワークはカレールーのようなもの</h3>
+                    <p>スパイスから一からカレーを作ることもできますが、配合は難しく、失敗のリスクもあります。一方でルーを使えば、<strong>決まった工程で決まった味が約束</strong>され、具材選びに注力できます。</p>
+                    <p>フレームワークも同じで、決まった構成を使うことで記述の統一化、チェックの容易化、品質担保が実現されます。その代表的な構成がMVCです。</p>
+                </div>
+                
+                <div class="example-box">
+                    <h3>🏪 MVCをレストランで理解しよう</h3>
+                    <p>MVCは一つのレストランとして捉えると分かりやすくなります。<br>
+                    <strong>お客様が来た際に、その案内をし注文を受けるのはホールスタッフ。実際に料理というビジネスロジックを担うのはシェフ。そして、シェフの作成した料理をさらに盛り付けて整えるのがアシスタント。</strong></p>
+                </div>
+
+                <h3>📊 最小構成から理解する</h3>
+                <div class="flow-chart">
+                    <h4>Step 1: 最小のMVC構成</h4>
+                    <div class="flow-item">👤 お客様（ユーザー）</div>
+                    <div>「ブログ記事一覧見せて！」</div>
+                    <span class="flow-arrow">↓ リクエスト</span>
+                    
+                    <div class="flow-item">🤵 Controller<br>（ホールスタッフ）</div>
+                    <div>リクエストを受け取り、適切な処理に振り分け</div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div class="flow-item">👨‍🍳 Model<br>（シェフ）</div>
+                    <div>データベースから情報を取得・加工</div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div class="flow-item">🍽️ View<br>（盛り付けアシスタント）</div>
+                    <div>データを美しくHTML形式で整形</div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div class="flow-item">😊 お客様（ユーザー）</div>
+                    <div>美しく整形されたページを受け取る</div>
+                </div>
+                
+                <div class="important">
+                    <strong>💡 なぜこの分離が重要？</strong><br>
+                    レストランでもホールスタッフが料理を作ったり、シェフが接客したりしないように、各層の責任を明確に分離することで、コードの管理が容易になり、チームでの開発も効率的になります。
+                </div>
+
+                <h3>🏥 実際のWebアプリケーションでは...</h3>
+                
+                <div class="concept-box">
+                    <strong>MVCだけでは不十分な現実</strong><br>
+                    レストランの例でMVCを理解しましたが、実際のWebアプリケーションを考えてみましょう。<br>
+                    病院や市役所のように、来訪者は様々な目的を持ってやってきます：
+                    <ul style="text-align: left; margin: 10px 20px;">
+                        <li>「ブログ記事を読みたい」</li>
+                        <li>「新規ユーザー登録をしたい」</li>
+                        <li>「コメントを投稿したい」</li>
+                        <li>「プロフィールを編集したい」</li>
+                    </ul>
+                    これらの要望に対して、適切な専門部署（Controller）に案内する必要があります。
+                </div>
+                
+                <h3>🚪 Routesの登場</h3>
+                
+                <div class="flow-chart">
+                    <h4>Step 2: 複数機能への対応</h4>
+                    <div class="example-box">
+                        <strong>問題：どの部署に案内すべき？</strong><br>
+                        <div style="background: #fee2e2; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                            ユーザー「/posts/1にアクセスしたい」<br>
+                            ↓<br>
+                            システム「PostsController？UsersController？CommentsController？どれ？」
+                        </div>
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>解決策：Routes（ルーティング）</strong><br>
+                        リクエストのURL（/posts/1）を見て、適切なController（PostsController）に案内する<strong>案内係</strong>が必要です。<br>
+                        これが<strong>Routes</strong>の役割です。
+                    </div>
+                </div>
+                
+                <div class="flow-chart">
+                    <h4>Step 3: Routesを含む完全な流れ</h4>
+                    <div class="flow-item">👤 ユーザー</div>
+                    <div>「/posts/1 にアクセス」</div>
+                    <span class="flow-arrow">↓ HTTPリクエスト</span>
+                    
+                    <div class="flow-item" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">🚪 Routes<br>（案内係）</div>
+                    <div>「/posts/1 なら PostsController の show アクションですね」</div>
+                    <span class="flow-arrow">↓ 適切な部署に案内</span>
+                    
+                    <div class="flow-item">🤵 PostsController</div>
+                    <span class="flow-arrow">↓</span>
+                    <div class="flow-item">👨‍🍳 Model</div>
+                    <span class="flow-arrow">↓</span>
+                    <div class="flow-item">🍽️ View</div>
+                    <span class="flow-arrow">↓ レスポンス</span>
+                    <div class="flow-item">😊 ユーザー</div>
+                </div>
+                
+                <h3>🤔 1つの機能しかない場合は？</h3>
+                
+                <div class="important">
+                    <strong>理論的には不要、でも実際は必須</strong><br>
+                    もしアプリケーションに本当に1つの機能しかないなら、案内係は不要に思えますよね？<br>
+                    <strong>でも、Railsなどのフレームワークでは、仕組み上必ずRoutesを通るように作られています。</strong><br>
+                    つまり、機能が1つでもroutes.rbファイルにルート定義を書く必要があるのです。
+                </div>
+                
+                <div class="code-box">
+                    <pre>
+# config/routes.rb - 必須のルート定義
+
+Rails.application.routes.draw do
+  # 機能が1つでも必ず定義が必要
+  get '/posts', to: 'posts#index'    
+  
+  # 複数機能になると本格的に活躍
+  get '/posts/:id', to: 'posts#show'   # ブログ記事詳細
+  get '/users/new', to: 'users#new'    # ユーザー登録
+  post '/comments', to: 'comments#create' # コメント投稿
+  get '/profiles/edit', to: 'profiles#edit' # プロフィール編集
+  
+  # 一括設定でシンプルに
+  resources :posts  # 7つの基本操作を一度に定義
+end</pre>
+                </div>
+                
+                <h3>各層の詳細な役割</h3>
+                <table>
+                    <tr>
+                        <th>MVC</th>
+                        <th>レストラン例</th>
+                        <th>実際の役割</th>
+                        <th>Railsでの場所</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Routes</strong></td>
+                        <td>受付係</td>
+                        <td>
+                            • URLと担当者のマッピング<br>
+                            • 「どのホールスタッフが対応するか」<br>
+                            • HTTPメソッドの判別
+                        </td>
+                        <td><code>config/routes.rb</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Controller</strong></td>
+                        <td>ホールスタッフ</td>
+                        <td>
+                            • リクエストの受付<br>
+                            • 処理の振り分け<br>
+                            • ModelとViewの調整<br>
+                            • レスポンスの決定
+                        </td>
+                        <td><code>app/controllers/</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model</strong></td>
+                        <td>シェフ</td>
+                        <td>
+                            • データの管理<br>
+                            • ビジネスロジック<br>
+                            • DB操作<br>
+                            • バリデーション
+                        </td>
+                        <td><code>app/models/</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>View</strong></td>
+                        <td>盛り付けアシスタント</td>
+                        <td>
+                            • 画面の表示<br>
+                            • HTMLの生成<br>
+                            • ユーザーインターフェース<br>
+                            • レスポンスの整形
+                        </td>
+                        <td><code>app/views/</code></td>
+                    </tr>
+                </table>
+
+                <h3>アクション（Action）とは？</h3>
+                <div class="concept-box">
+                    <strong>アクション = コントローラー内で定義されたpublicメソッド</strong><br>
+                    1つのアクションが1つのWebページや処理に対応します
+                </div>
+
+                <div class="code-box">
+                    <pre>
+class PostsController < ApplicationController
+  # これがアクション ↓
+  def index
+    @posts = Post.all
+  end
+  
+  # これもアクション ↓
+  def show
+    @post = Post.find(params[:id])
+  end
+  
+  # privateメソッドはアクションではない
+  private
+  
+  def post_params
+    params.require(:post).permit(:title, :content)
+  end
+end
+                    </pre>
+                </div>
+
+                <h3>7つの標準アクション（RESTful）</h3>
+                <table>
+                    <tr>
+                        <th>アクション</th>
+                        <th>HTTP</th>
+                        <th>URL</th>
+                        <th>役割</th>
+                        <th>画面例</th>
+                    </tr>
+                    <tr>
+                        <td><strong>index</strong></td>
+                        <td>GET</td>
+                        <td>/posts</td>
+                        <td>一覧表示</td>
+                        <td>ブログ記事一覧</td>
+                    </tr>
+                    <tr>
+                        <td><strong>show</strong></td>
+                        <td>GET</td>
+                        <td>/posts/:id</td>
+                        <td>詳細表示</td>
+                        <td>記事の本文</td>
+                    </tr>
+                    <tr>
+                        <td><strong>new</strong></td>
+                        <td>GET</td>
+                        <td>/posts/new</td>
+                        <td>作成フォーム</td>
+                        <td>新規投稿画面</td>
+                    </tr>
+                    <tr>
+                        <td><strong>create</strong></td>
+                        <td>POST</td>
+                        <td>/posts</td>
+                        <td>作成処理</td>
+                        <td>（リダイレクト）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>edit</strong></td>
+                        <td>GET</td>
+                        <td>/posts/:id/edit</td>
+                        <td>編集フォーム</td>
+                        <td>編集画面</td>
+                    </tr>
+                    <tr>
+                        <td><strong>update</strong></td>
+                        <td>PATCH/PUT</td>
+                        <td>/posts/:id</td>
+                        <td>更新処理</td>
+                        <td>（リダイレクト）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>destroy</strong></td>
+                        <td>DELETE</td>
+                        <td>/posts/:id</td>
+                        <td>削除処理</td>
+                        <td>（リダイレクト）</td>
+                    </tr>
+                </table>
+
+                <div class="important">
+                    <strong>覚えておこう：</strong><br>
+                    この7つのアクションで、ほとんどのWebアプリの機能が作れる！
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔄 Render vs Redirect 完全マスター</h2>
+                
+                <div class="flow-chart">
+                    <h3>処理の流れの違い</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <h4>🔄 Redirect の場合</h4>
+                            <div class="flow-item">Controller処理</div>
+                            <span class="flow-arrow">↓</span>
+                            <div class="flow-item">ブラウザに「移動して」</div>
+                            <span class="flow-arrow">↓</span>
+                            <div class="flow-item">新URLにアクセス</div>
+                            <span class="flow-arrow">↓</span>
+                            <div class="flow-item">新ページ表示</div>
+                        </div>
+                        <div>
+                            <h4>📄 Render の場合</h4>
+                            <div class="flow-item">Controller処理</div>
+                            <span class="flow-arrow">↓</span>
+                            <div class="flow-item">指定ビューを直接表示</div>
+                            <span class="flow-arrow">↓</span>
+                            <div class="flow-item">ページ表示</div>
+                            <span class="flow-arrow">↓</span>
+                            <div style="opacity: 0.5;">URLは変わらない</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>使い分けのルール</h3>
+                <table>
+                    <tr>
+                        <th>状況</th>
+                        <th>使用方法</th>
+                        <th>理由</th>
+                        <th>例</th>
+                    </tr>
+                    <tr>
+                        <td>データ保存成功</td>
+                        <td><code>redirect_to</code></td>
+                        <td>PRGパターン</td>
+                        <td>投稿作成 → 詳細ページ</td>
+                    </tr>
+                    <tr>
+                        <td>バリデーションエラー</td>
+                        <td><code>render</code></td>
+                        <td>エラー情報保持</td>
+                        <td>入力エラー → 入力画面再表示</td>
+                    </tr>
+                    <tr>
+                        <td>削除成功</td>
+                        <td><code>redirect_to</code></td>
+                        <td>削除後のページへ</td>
+                        <td>記事削除 → 一覧ページ</td>
+                    </tr>
+                    <tr>
+                        <td>権限エラー</td>
+                        <td><code>render</code></td>
+                        <td>エラーページ直接表示</td>
+                        <td>403エラーページ</td>
+                    </tr>
+                </table>
+
+                <div class="code-box">
+                    <pre>
+class PostsController < ApplicationController
+  def create
+    @post = Post.new(post_params)
+    
+    if @post.save
+      # 成功時はリダイレクト → PRGパターン
+      redirect_to @post, notice: '投稿を作成しました'
+    else
+      # 失敗時はレンダー → バリデーションエラーを表示
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
+  def update
+    @post = Post.find(params[:id])
+    
+    if @post.update(post_params)
+      redirect_to @post, notice: '投稿を更新しました'
+    else
+      # edit アクションではなく :edit ビューをレンダー
+      render :edit, status: :unprocessable_entity
+    end
+  end
+  
+  def destroy
+    @post = Post.find(params[:id])
+    @post.destroy!
+    
+    # 削除後は一覧ページにリダイレクト
+    redirect_to posts_path, 
+                notice: '投稿を削除しました',
+                status: :see_other
+  end
+end
+                    </pre>
+                </div>
+
+                <div class="important">
+                    <strong>PRG（Post-Redirect-Get）パターン：</strong><br>
+                    データ更新後はリダイレクトすることで、ブラウザの「戻る」「再読み込み」による重複送信を防ぐ重要な設計パターン
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💬 Flash メッセージシステム</h2>
+                
+                <h3>Flashの種類と使い分け</h3>
+                <table>
+                    <tr>
+                        <th>種類</th>
+                        <th>用途</th>
+                        <th>表示タイミング</th>
+                        <th>例</th>
+                    </tr>
+                    <tr>
+                        <td><code>flash[:notice]</code></td>
+                        <td>成功メッセージ</td>
+                        <td>次のリクエスト</td>
+                        <td>「保存しました」</td>
+                    </tr>
+                    <tr>
+                        <td><code>flash[:alert]</code></td>
+                        <td>エラーメッセージ</td>
+                        <td>次のリクエスト</td>
+                        <td>「削除できませんでした」</td>
+                    </tr>
+                    <tr>
+                        <td><code>flash.now[:notice]</code></td>
+                        <td>即座に表示</td>
+                        <td>現在のリクエスト</td>
+                        <td>「検索結果なし」</td>
+                    </tr>
+                </table>
+
+                <div class="code-box">
+                    <pre>
+class PostsController < ApplicationController
+  def create
+    @post = Post.new(post_params)
+    
+    if @post.save
+      # redirect で次のページへ → flash を使用
+      redirect_to @post, notice: '投稿を作成しました'
+      # 上記は下記と同じ意味
+      # flash[:notice] = '投稿を作成しました'
+      # redirect_to @post
+    else
+      # render で同じページを再表示 → flash.now を使用
+      flash.now[:alert] = '作成に失敗しました'
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
+  def search
+    @posts = Post.where("title LIKE ?", "%#{params[:q]}%")
+    
+    if @posts.empty?
+      flash.now[:notice] = "「#{params[:q]}」の検索結果が見つかりませんでした"
+    end
+    
+    render :index
+  end
+end
+                    </pre>
+                </div>
+
+                <h3>ビューでのFlash表示</h3>
+                <div class="code-box">
+                    <pre>
+&lt;!-- app/views/layouts/application.html.erb --&gt;
+&lt;% flash.each do |type, message| %&gt;
+  &lt;div class="alert alert-&lt;%= type == 'notice' ? 'success' : 'danger' %&gt;"&gt;
+    &lt;%= message %&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;!-- より詳細な制御 --&gt;
+&lt;% if flash[:notice] %&gt;
+  &lt;div class="alert alert-success alert-dismissible"&gt;
+    &lt;button type="button" class="close" data-dismiss="alert"&gt;&amp;times;&lt;/button&gt;
+    &lt;%= flash[:notice] %&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;% if flash[:alert] %&gt;
+  &lt;div class="alert alert-danger alert-dismissible"&gt;
+    &lt;button type="button" class="close" data-dismiss="alert"&gt;&amp;times;&lt;/button&gt;
+    &lt;%= flash[:alert] %&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+                    </pre>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showMainContent('advanced')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                    次へ →
+                </button>
+            </div>
+        </div>
+
+        <!-- 実践テクニック -->
+        <div id="advanced" class="content-section">
+            <div class="section">
+                <h2>🎯 実践テクニック</h2>
+                
+                <h3>スキャフォールドの真実 <span class="badge beginner-badge">初心者必読</span></h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ メリット</h4>
+                        <ul>
+                            <li>学習用として最適</li>
+                            <li>プロトタイプ高速作成</li>
+                            <li>Railsの規約を学べる</li>
+                            <li>基本CRUD操作が完成</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ デメリット</h4>
+                        <ul>
+                            <li>不要なコードも生成</li>
+                            <li>カスタマイズが必要</li>
+                            <li>実プロジェクトには不向き</li>
+                            <li>デザインが汎用的</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <h4>上級者がスキャフォールドを使わない理由</h4>
+                    <ul>
+                        <li>🎯 <strong>要件特化</strong>：実際のプロジェクトは独自要件が多い</li>
+                        <li>🔒 <strong>セキュリティ</strong>：より厳しいセキュリティ要件</li>
+                        <li>⚡ <strong>パフォーマンス</strong>：最適化が必要</li>
+                        <li>👥 <strong>チーム規約</strong>：独自のコーディング規約</li>
+                    </ul>
+                </div>
+
+                <h3>N+1クエリ問題の解決 <span class="badge advanced-badge">上級</span></h3>
+                <div class="warning">
+                    <h4>❌ 問題のあるコード</h4>
+                    <div class="code-box">
+                        <pre>
+# 悪い例：N+1クエリが発生
+@posts = Post.all  # 1回のクエリ
+@posts.each do |post|
+  puts post.user.name     # 各postに対してUserクエリ（N回）
+  puts post.comments.count # 各postに対してCommentクエリ（N回）
+end
+# 合計：1 + N + N = 2N + 1 回のクエリ
+                        </pre>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <h4>✅ 改善されたコード</h4>
+                    <div class="code-box">
+                        <pre>
+# 良い例：includesで一括取得
+@posts = Post.includes(:user, :comments)  # 3回のクエリで完了
+@posts.each do |post|
+  puts post.user.name     # 追加クエリなし
+  puts post.comments.count # 追加クエリなし
+end
+
+# より複雑な関連も一括取得可能
+@posts = Post.includes(:user, :comments, tags: :category)
+
+# 条件付きinclude
+@posts = Post.includes(:user).where(users: { active: true })
+
+# joins を使った効率的な絞り込み
+@posts = Post.joins(:user).where(users: { premium: true })
+                        </pre>
+                    </div>
+                </div>
+
+                <h3>ストロングパラメータ詳解 <span class="badge">セキュリティ</span></h3>
+                <div class="concept-box">
+                    <strong>ストロングパラメータ = 悪意のあるデータから守る「門番」</strong>
+                </div>
+
+                <div class="flow-chart">
+                    <div><strong>ユーザーからのデータ</strong></div>
+                    <div style="background: #fee2e2; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                        name: "太郎"<br>
+                        email: "taro@example.com"<br>
+                        <span style="color: red; font-weight: bold;">admin: true  ← 悪意のあるデータ！</span>
+                    </div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div><strong>ストロングパラメータで検査</strong></div>
+                    <div class="code-box">
+                        <pre>
+def user_params
+  params.require(:user).permit(:name, :email)
+  # adminは許可していないので除外される！
+end
+                        </pre>
+                    </div>
+                    <span class="flow-arrow">↓</span>
+                    
+                    <div><strong>安全なデータのみ通過</strong></div>
+                    <div style="background: #d1fae5; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                        name: "太郎"<br>
+                        email: "taro@example.com"
+                    </div>
+                </div>
+
+                <div class="code-box">
+                    <pre>
+class UsersController < ApplicationController
+  def create
+    @user = User.new(user_params)
+    
+    if @user.save
+      redirect_to @user, notice: 'ユーザーを作成しました'
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
+  private
+  
+  # 基本的なパラメータ
+  def user_params
+    params.require(:user).permit(:name, :email, :age)
+  end
+  
+  # 配列を含むパラメータ
+  def post_params
+    params.require(:post).permit(:title, :content, tag_ids: [])
+  end
+  
+  # ネストした属性
+  def user_params
+    params.require(:user).permit(:name, :email, 
+                                  profile_attributes: [:bio, :website])
+  end
+  
+  # 条件付きパラメータ
+  def user_params
+    permitted = [:name, :email]
+    permitted << :admin if current_user.admin?
+    params.require(:user).permit(permitted)
+  end
+end
+                    </pre>
+                </div>
+
+                <h3>バリデーション高度テクニック <span class="badge advanced-badge">上級</span></h3>
+                <div class="code-box">
+                    <pre>
+class User < ApplicationRecord
+  # 基本的なバリデーション
+  validates :email, presence: true, 
+                    uniqueness: { case_sensitive: false },
+                    format: { with: URI::MailTo::EMAIL_REGEXP }
+  
+  validates :age, numericality: { 
+    greater_than: 0, 
+    less_than: 150,
+    allow_nil: true
+  }
+  
+  # カスタムバリデーション
+  validate :email_format_check
+  validate :adult_user_for_premium, if: :premium_user?
+  
+  # 条件付きバリデーション
+  validates :company, presence: true, if: :business_account?
+  validates :hobby, presence: true, unless: :business_account?
+  
+  # コンテキスト別バリデーション
+  validates :terms_accepted, acceptance: true, on: :create
+  validates :current_password, presence: true, on: :update
+  
+  # バリデーションのスキップ
+  validates :name, presence: true, unless: :skip_name_validation
+  
+  private
+  
+  def email_format_check
+    return if email.blank?
+    
+    # より厳密なメールアドレス検証
+    unless email.match?(/\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i)
+      errors.add(:email, "正しいメールアドレス形式で入力してください")
+    end
+    
+    # 禁止ドメインチェック
+    forbidden_domains = %w[example.com test.com]
+    domain = email.split('@').last
+    if forbidden_domains.include?(domain)
+      errors.add(:email, "このドメインは使用できません")
+    end
+  end
+  
+  def adult_user_for_premium
+    if age.present? && age < 18
+      errors.add(:age, "プレミアムアカウントは18歳以上である必要があります")
+    end
+  end
+  
+  def premium_user?
+    account_type == 'premium'
+  end
+  
+  def business_account?
+    account_type == 'business'
+  end
+  
+  attr_accessor :skip_name_validation
+end
+                    </pre>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showMainContent('resources')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                    次へ →
+                </button>
+            </div>
+        </div>
+
+        <!-- 学習リソース -->
+        <div id="resources" class="content-section">
+            <div class="section" id="community">
+                <h2>📚 学習リソース & コミュニティ</h2>
+                
+                <h3>🎓 公式学習リソース</h3>
+                <div class="official-resource">
+                    <h4>Ruby公式</h4>
+                    <ul>
+                        <li><strong><a href="https://try.ruby-lang.org/" target="_blank">Try Ruby</a></strong> - 30分でRubyをマスター（インタラクティブ）</li>
+                        <li><strong><a href="https://www.ruby-lang.org/ja/documentation/" target="_blank">公式ドキュメント</a></strong> - 最新バージョンのリファレンス</li>
+                        <li><strong>20分ではじめるRuby</strong> - クイックスタートガイド</li>
+                        <li><strong>他言語からのRuby入門</strong> - 経験者向け移行ガイド</li>
+                    </ul>
+                </div>
+
+                <div class="official-resource">
+                    <h4>Rails公式</h4>
+                    <ul>
+                        <li><strong><a href="https://railsguides.jp/" target="_blank">Rails ガイド</a></strong> - 日本語版公式ガイド</li>
+                        <li><strong><a href="https://api.rubyonrails.org/" target="_blank">Rails API ドキュメント</a></strong> - 詳細なAPI仕様</li>
+                        <li><strong><a href="https://guides.rubyonrails.org/getting_started.html" target="_blank">Getting Started</a></strong> - 公式チュートリアル</li>
+                    </ul>
+                </div>
+
+                <h3>📖 推奨書籍</h3>
+                <table>
+                    <tr>
+                        <th>書籍名</th>
+                        <th>レベル</th>
+                        <th>特徴</th>
+                    </tr>
+                    <tr>
+                        <td><strong>プロを目指す人のためのRuby入門</strong></td>
+                        <td><span class="badge beginner-badge">初心者</span></td>
+                        <td>Ruby基礎文法を丁寧に解説</td>
+                    </tr>
+                    <tr>
+                        <td><strong>現場で使える Ruby on Rails 5速習実践ガイド</strong></td>
+                        <td><span class="badge">中級</span></td>
+                        <td>実践的なRails開発手法</td>
+                    </tr>
+                    <tr>
+                        <td><strong>リファクタリング:Rubyエディション</strong></td>
+                        <td><span class="badge advanced-badge">上級</span></td>
+                        <td>コード改善技術の習得</td>
+                    </tr>
+                    <tr>
+                        <td><strong>メタプログラミングRuby</strong></td>
+                        <td><span class="badge advanced-badge">上級</span></td>
+                        <td>Rubyの高度な機能を理解</td>
+                    </tr>
+                </table>
+
+                <h3>💻 推奨開発環境</h3>
+                <table>
+                    <tr>
+                        <th>カテゴリ</th>
+                        <th>ツール</th>
+                        <th>理由</th>
+                    </tr>
+                    <tr>
+                        <td><strong>エディタ</strong></td>
+                        <td>
+                            Visual Studio Code<br>
+                            RubyMine<br>
+                            Vim/Emacs
+                        </td>
+                        <td>
+                            多機能・無料<br>
+                            Ruby専用IDE<br>
+                            高速・カスタマイズ性
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ターミナル</strong></td>
+                        <td>
+                            iTerm2 (macOS)<br>
+                            Windows Terminal<br>
+                            標準ターミナル
+                        </td>
+                        <td>
+                            高機能<br>
+                            モダンな機能<br>
+                            シンプル
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>バージョン管理</strong></td>
+                        <td>
+                            rbenv<br>
+                            rvm<br>
+                            asdf
+                        </td>
+                        <td>
+                            シンプル・軽量<br>
+                            多機能<br>
+                            多言語対応
+                        </td>
+                    </tr>
+                </table>
+
+                <h3>🌟 コミュニティ</h3>
+                <div class="example-box">
+                    <h4>日本のRuby/Railsコミュニティ</h4>
+                    <ul>
+                        <li><strong>日本Rubyの会</strong> - Ruby普及活動の中心組織</li>
+                        <li><strong>Rails Girls</strong> - 女性向けRailsワークショップ</li>
+                        <li><strong>RubyKaigi</strong> - 年次Ruby国際会議</li>
+                        <li><strong>地域Ruby会議</strong> - 各地域でのRuby交流</li>
+                        <li><strong>オンラインコミュニティ</strong> - Discord、Slack等</li>
+                    </ul>
+                </div>
+
+                <h3>🎯 学習ロードマップ</h3>
+                <div class="flow-chart">
+                    <div><strong>Step 1: Ruby基礎</strong></div>
+                    <div style="font-size: 0.9rem;">Try Ruby → 基本文法 → 小さなプログラム作成</div>
+                    <span class="flow-arrow">↓ 2-4週間</span>
+                    
+                    <div><strong>Step 2: Rails入門</strong></div>
+                    <div style="font-size: 0.9rem;">Rails Tutorial → MVC理解 → 簡単なWebアプリ</div>
+                    <span class="flow-arrow">↓ 1-2ヶ月</span>
+                    
+                    <div><strong>Step 3: 実践開発</strong></div>
+                    <div style="font-size: 0.9rem;">オリジナルアプリ → テスト → デプロイ</div>
+                    <span class="flow-arrow">↓ 2-3ヶ月</span>
+                    
+                    <div><strong>Step 4: 応用技術</strong></div>
+                    <div style="font-size: 0.9rem;">API開発 → パフォーマンス → セキュリティ</div>
+                    <span class="flow-arrow">↓ 継続的学習</span>
+                    
+                    <div><strong>🎉 実践レベル</strong></div>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 効果的な学習のコツ</h4>
+                    <ul>
+                        <li><strong>手を動かす</strong>：読むだけでなく実際にコードを書く</li>
+                        <li><strong>小さく始める</strong>：完璧を目指さず、動くものを作る</li>
+                        <li><strong>エラーを恐れない</strong>：エラーメッセージは学習の宝庫</li>
+                        <li><strong>コミュニティ参加</strong>：質問や情報交換で成長加速</li>
+                        <li><strong>継続的学習</strong>：少しずつでも毎日続ける</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 今すぐ始めよう！</h2>
+                
+                <div class="interactive-demo">
+                    <h3>🎮 今すぐRubyを体験</h3>
+                    <p>ブラウザだけで始められる！</p>
+                    <button class="demo-button" onclick="window.open('https://try.ruby-lang.org/', '_blank')">
+                        Try Ruby で今すぐ体験
+                    </button>
+                    <button class="demo-button" onclick="window.open('https://railsguides.jp/', '_blank')">
+                        Rails ガイドを読む
+                    </button>
+                </div>
+
+                <div class="important">
+                    <h4>🎯 最初の一歩</h4>
+                    <p>
+                        プログラミングの世界に飛び込むのは勇気がいりますが、Rubyは初心者に優しい言語です。<br>
+                        「プログラマーの幸福」を重視して設計されているので、楽しみながら学習できます。
+                    </p>
+                    <p>
+                        <strong>今日から始めて、1ヶ月後には小さなWebアプリが作れるようになっています！</strong>
+                    </p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showMainContent('ruby-intro')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
+                    最初に戻る ↺
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showMainContent(sectionId) {
+            // すべてのナビタブから active を削除
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // すべてのコンテンツセクションを非表示
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 対応するタブをアクティブに（event.targetがない場合の対応）
+            const targetTab = document.querySelector(`[onclick="showMainContent('${sectionId}')"]`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // 選択されたセクションをアクティブに
+            const targetSection = document.getElementById(sectionId);
+            targetSection.classList.add('active');
+            
+            // セクションの先頭にスムーズスクロール
+            targetSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // プログレスバーを更新
+            updateProgressBar();
+        }
+        
+        function showRubyContent(contentId) {
+            // Ruby文法セクション内のタブ切り替え
+            document.querySelectorAll('#ruby-syntax .tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            document.querySelectorAll('#ruby-syntax .content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(contentId).classList.add('active');
+        }
+        
+        function showEnvContent(contentId) {
+            // 環境設定セクション内のタブ切り替え
+            document.querySelectorAll('#windows, #mac, #linux').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('.tag-selector .tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        function showGemContent(contentId) {
+            // Gem紹介セクション内のタブ切り替え
+            document.querySelectorAll('.tag-selector .tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            document.querySelectorAll('#essential, #database, #authentication, #testing, #ui, #utility').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(contentId).classList.add('active');
+        }
+        
+        function showContent(contentId) {
+            // 汎用コンテンツ切り替え
+            if (contentId === 'ruby-basics') {
+                showMainContent('ruby-syntax');
+            }
+        }
+        
+        // プログレスバー更新
+        function updateProgressBar() {
+            const sections = document.querySelectorAll('.content-section');
+            const activeIndex = Array.from(sections).findIndex(section => 
+                section.classList.contains('active')
+            );
+            const progress = ((activeIndex + 1) / sections.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+        
+        // スクロール時のプログレスバー更新
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('progressBar').style.width = scrolled + "%";
+        });
+        
+        // 初期プログレスバー設定
+        updateProgressBar();
+        
+        // ページ読み込み時のアニメーション
+        window.addEventListener('load', function() {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach((section, index) => {
+                section.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+        
+    </script>
+</body>
+</html>

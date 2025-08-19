@@ -571,17 +571,19 @@
         </div>
 
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="showMainContent('ruby-intro')">Ruby入門</div>
+            <div class="nav-tab active" onclick="showMainContent('environment')">環境設定</div>
+            <div class="nav-tab" onclick="showMainContent('ruby-intro')">Ruby入門</div>
             <div class="nav-tab" onclick="showMainContent('ruby-syntax')">Ruby文法</div>
             <div class="nav-tab" onclick="showMainContent('rails-basics')">Rails基礎</div>
             <div class="nav-tab" onclick="showMainContent('mvc-deep')">MVC詳解</div>
             <div class="nav-tab" onclick="showMainContent('advanced')">実践テクニック</div>
             <div class="nav-tab" onclick="showMainContent('resources')">学習リソース</div>
+            <div class="nav-tab" onclick="showMainContent('testing-tools')">テスト・品質管理</div>
         </div>
 
 
-        <!-- Ruby入門 -->
-        <div id="ruby-intro" class="content-section active">
+        <!-- 環境設定 -->
+        <div id="environment" class="content-section active">
             <div class="section">
                 <h2>🛠️ 開発環境の準備</h2>
                 
@@ -669,6 +671,424 @@ code .
                         • ファイルシステムの互換性問題なし<br>
                         • 本番環境に近い開発体験
                     </div>
+
+                    <div class="section">
+                        <h3>⚡ WSL2パフォーマンス最適化</h3>
+                        
+                        <div class="subsection">
+                            <h4>🚨 問題: Windows環境でのRails開発が遅い</h4>
+                            <p><strong>症状：</strong></p>
+                            <ul>
+                                <li>Rubocopの実行に5分以上</li>
+                                <li>RSpecの実行に15分以上</li>
+                                <li>bin/devの起動が非常に遅い</li>
+                                <li>npm install / bundle installが異常に遅い</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="subsection">
+                            <h4>🔍 なぜWindows側のファイルが遅いのか？</h4>
+                            <div class="concept-box">
+                                <strong>技術的な原因：</strong>
+                                <ul>
+                                    <li><strong>ファイルシステム変換</strong>: NTFS（Windows）↔ ext4（Linux）の変換オーバーヘッド</li>
+                                    <li><strong>9Pプロトコル</strong>: WSL2は9Pプロトコル経由でWindowsファイルにアクセス（遅い）</li>
+                                    <li><strong>メタデータ変換</strong>: 権限、タイムスタンプ、シンボリックリンクの変換コスト</li>
+                                    <li><strong>大量ファイル問題</strong>: node_modules、.git、vendorなど数千ファイルへのアクセスで特に顕著</li>
+                                </ul>
+                                <p style="margin-top: 15px;"><strong>結論：</strong> /mnt/c/配下での開発は避け、WSL2のネイティブファイルシステム（~/）を使用すべき</p>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <h4>✅ 解決策: プロジェクトをWSL2内のLinuxファイルシステムに移動</h4>
+                            
+                            <div class="important">
+                                <strong>📝 どの段階からでも始められます：</strong><br>
+                                • <strong>新規プロジェクト</strong> → Step 1から開始<br>
+                                • <strong>既存プロジェクト（Git管理あり）</strong> → Step 2から開始<br>
+                                • <strong>既存プロジェクト（Git管理なし）</strong> → Step 3から開始<br>
+                                • <strong>問題が起きた場合</strong> → ロールバック手順あり
+                            </div>
+                            
+                            <h5>Step 1: WSL2環境の準備</h5>
+                            <pre><code># WSL内でプロジェクト用ディレクトリを作成
+mkdir -p ~/projects</code></pre>
+                            
+                            <h5>Step 2: 既存プロジェクトの移行（推奨：シンボリックリンク方式）</h5>
+                            <div class="tip">
+                                <strong>🎯 この方法の利点：</strong><br>
+                                • 今まで通りのパス（C:\Users\noro\Desktop\...）で作業可能<br>
+                                • ショートカットやブックマークを変更する必要なし<br>
+                                • 処理速度は大幅に向上<br>
+                                • 簡単にロールバック可能
+                            </div>
+
+                            <div class="warning">
+                                <strong>⚠️ 重要な注意点：</strong><br>
+                                • cpコマンドは非常に時間がかかります（数分〜数十分）<br>
+                                • rsyncを使用すると高速化されます<br>
+                                • コピー中はWindows側ファイルシステムの遅さを実感できます
+                            </div>
+
+                            <p><strong>高速コピー（推奨）：</strong></p>
+                            <pre><code># rsyncで高速コピー（進捗表示付き）
+rsync -av --progress /mnt/c/Users/noro/Desktop/portfolio/RubyPractice/workspace/techlog-app/ ~/projects/techlog-app/
+
+# 権限を修正
+cd ~/projects/techlog-app
+chmod -R 755 .
+
+# Git設定を調整（改行コード問題回避）
+git config core.autocrlf input
+git config core.eol lf</code></pre>
+
+                            <p><strong>通常コピー（時間がかかる）：</strong></p>
+                            <pre><code># 時間がかかるが確実
+cp -r /mnt/c/Users/noro/Desktop/portfolio/RubyPractice/workspace/techlog-app ~/projects/</code></pre>
+
+                            <p><strong>PowerShellを管理者権限で実行：</strong></p>
+                            <pre><code># 4. 元のフォルダをバックアップ
+Rename-Item "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app" "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app_backup"
+
+# 5. シンボリックリンクを作成（今まで通りのパスで使用可能）
+New-Item -ItemType SymbolicLink -Path "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app" -Target "\\wsl$\Ubuntu\home\[WSLユーザー名]\projects\techlog-app"</code></pre>
+
+                            <div class="warning">
+                                <strong>⚠️ 重要：</strong> シンボリックリンク作成には管理者権限が必要です。<br>
+                                PowerShellを右クリック → 「管理者として実行」で開いてください。
+                            </div>
+
+                            <h5>WindowsからWSL内ファイルへのアクセス</h5>
+                            <p><strong>エクスプローラーでアクセス：</strong></p>
+                            <ul>
+                                <li>アドレスバーに <code>\\wsl$</code> と入力</li>
+                                <li>または直接 <code>\\wsl$\Ubuntu\home\[username]\projects\rails-app</code></li>
+                            </ul>
+
+                            <h5>デスクトップショートカットの作成（PowerShellで実行）</h5>
+                            <pre><code>$WshShell = New-Object -comObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\rails-app.lnk")
+$Shortcut.TargetPath = "\\wsl$\Ubuntu\home\[username]\projects\rails-app"
+$Shortcut.Save()</code></pre>
+
+                            <h5>📝 エディタ（VS Code/Cursor）での開発</h5>
+                            
+                            <div class="important">
+                                <strong>⚡ 超重要：エディタは必ずWSLモードで開く！</strong><br>
+                                エディタの左下に「WSL: Ubuntu」と表示されているか必ず確認してください。<br>
+                                これが表示されていないと、せっかくの高速化が無意味になります。
+                            </div>
+
+                            <h6>🔰 初心者向け：一番簡単な開き方</h6>
+                            <div class="tip">
+                                <strong>この方法が最も確実でおすすめ！</strong>
+                            </div>
+                            <pre><code># 1. WSLターミナルを開く（PowerShellで「wsl」と入力）
+# 2. プロジェクトフォルダに移動
+cd ~/projects/techlog-app
+
+# 3. エディタを起動（どちらか1つ）
+code .   # VS Codeの場合
+cursor . # Cursorの場合</code></pre>
+                            
+                            <p>✅ <strong>成功の確認方法：</strong></p>
+                            <ul>
+                                <li>エディタの左下に <strong>「WSL: Ubuntu」</strong> と表示される</li>
+                                <li>ターミナルを開くと自動的にWSL（bash）になっている</li>
+                                <li>ファイルの保存や読み込みが高速</li>
+                            </ul>
+
+                            <h6>📚 その他の開き方（参考）</h6>
+                            <details>
+                                <summary style="cursor: pointer; color: #667eea;">▶ 他の方法を見る（クリックで展開）</summary>
+                                
+                                <p style="margin-top: 10px;"><strong>方法2: Windowsから開いてWSLに切り替え</strong></p>
+                                <ol>
+                                    <li>VS Code/Cursorを通常起動</li>
+                                    <li><code>Ctrl+Shift+P</code> でコマンドパレットを開く</li>
+                                    <li>「Remote-WSL: Open Folder in WSL」を選択</li>
+                                    <li><code>~/projects/techlog-app</code> を入力</li>
+                                </ol>
+                                
+                                <p><strong>方法3: Windows側のシンボリックリンクから開く</strong></p>
+                                <pre><code># PowerShellで
+cd C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app
+code .  # または cursor .</code></pre>
+                                <p>その後、エディタ内で「Reopen in WSL」を選択</p>
+                            </details>
+
+                            <h6>❌ よくある間違い（これはダメ！）</h6>
+                            <div class="warning">
+                                <strong>以下の方法では高速化されません：</strong>
+                                <ul>
+                                    <li>❌ エクスプローラーから直接 <code>\\wsl$\Ubuntu\...</code> を開く</li>
+                                    <li>❌ PowerShellから <code>code \\wsl$\Ubuntu\...</code> と入力</li>
+                                    <li>❌ 「WSL: Ubuntu」表示なしで編集を続ける</li>
+                                </ul>
+                            </div>
+
+                            <h6>🔧 エディタ別の注意点</h6>
+                            <div class="concept-box">
+                                <p><strong>VS Code：</strong></p>
+                                <ul>
+                                    <li>WSL拡張機能が必須（Microsoft公式）</li>
+                                    <li>自動的にWSLモードに切り替わることが多い</li>
+                                    <li>安定性が高い</li>
+                                </ul>
+                                
+                                <p style="margin-top: 15px;"><strong>Cursor：</strong></p>
+                                <ul>
+                                    <li>VS Codeと同じWSL拡張機能が使える</li>
+                                    <li>時々WSLモードへの切り替えが必要</li>
+                                    <li>AIアシスタント機能はWSL内でも動作</li>
+                                </ul>
+                            </div>
+
+                            <h5>エクスプローラーからのターミナル起動</h5>
+                            <p><strong>今まで通りの操作で高速化：</strong></p>
+                            <ul>
+                                <li><code>\\wsl$\Ubuntu\home\[username]\projects\rails-app</code> をエクスプローラーで開く</li>
+                                <li><code>Shift + 右クリック</code> → 「Linux シェルをここに開く」</li>
+                                <li>自動的に正しいWSLパス（/home/[username]/projects/rails-app）で開く</li>
+                                <li>claudeコマンドなども今まで通り使用可能</li>
+                            </ul>
+
+                            <h5>Windows Terminal（WSL）の自動起動設定</h5>
+                            <p><strong>重要：</strong> Shift+右クリックで確実にWSL/Ubuntuが起動するための設定</p>
+                            
+                            <p><strong>方法1: Windows Terminalの既定プロファイル設定</strong></p>
+                            <ol>
+                                <li>Windows Terminalを開く</li>
+                                <li><code>Ctrl + ,</code> で設定を開く</li>
+                                <li>「スタートアップ」→「既定のプロファイル」を「Ubuntu」に設定</li>
+                                <li>これで常にUbuntu（WSL）が起動</li>
+                            </ol>
+
+                            <p><strong>方法2: .wslconfigでWSL2の自動起動設定</strong></p>
+                            <pre><code># C:\Users\[username]\.wslconfig を作成
+[wsl2]
+memory=8GB  # メモリ割り当て（任意）
+processors=4  # CPU数（任意）
+
+# Windows起動時にWSLを自動起動するタスクスケジューラー設定
+# PowerShellを管理者権限で実行：
+$trigger = New-ScheduledTaskTrigger -AtLogon
+$action = New-ScheduledTaskAction -Execute "wsl.exe" -Argument "echo WSL started"
+Register-ScheduledTask -TaskName "Start WSL" -Trigger $trigger -Action $action -RunLevel Highest</code></pre>
+
+                            <p><strong>方法3: レジストリでコンテキストメニューを確実にWSL対応に</strong></p>
+                            <pre><code># レジストリエディタで以下を設定（上級者向け）
+# HKEY_CLASSES_ROOT\Directory\Background\shell\wt
+# 既定値: "ここで開く(&T)"
+# コマンド: wt.exe -d "%V"
+
+# またはPowerShellで自動設定：
+New-Item -Path "Registry::HKEY_CLASSES_ROOT\Directory\Background\shell\wt" -Force
+Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\Directory\Background\shell\wt" -Name "(Default)" -Value "Open WSL here"
+New-Item -Path "Registry::HKEY_CLASSES_ROOT\Directory\Background\shell\wt\command" -Force
+Set-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\Directory\Background\shell\wt\command" -Name "(Default)" -Value '"C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_*\wt.exe" -d "%V"'</code></pre>
+                        </div>
+
+                        <div class="subsection">
+                            <h4>🚀 実測された改善効果</h4>
+                            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                <tr style="background: rgba(255,255,255,0.1);">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid rgba(255,255,255,0.2);">タスク</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">移動前（/mnt/c/）</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">移動後（~/projects/）</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">改善倍率</th>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Rubocop実行</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">5分以上</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"><strong>4.008秒</strong></td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #4ade80;"><strong>約75倍高速化</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Rails server起動</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">非常に遅い</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"><strong>1.328秒</strong></td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #4ade80;"><strong>即座に起動</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">RSpec読み込み</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">15分以上</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"><strong>0.498秒</strong></td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #4ade80;"><strong>約1800倍高速化</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">bin/dev起動</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">非常に遅い</td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"><strong>約3秒</strong></td>
+                                    <td style="padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2); color: #4ade80;"><strong>劇的改善</strong></td>
+                                </tr>
+                            </table>
+
+                            <div class="concept-box">
+                                <strong>📊 実測データから分かること：</strong>
+                                <ul>
+                                    <li><strong>Rubocop</strong>: 300秒以上 → 4秒（約75倍高速化）</li>
+                                    <li><strong>RSpec</strong>: 900秒以上 → 0.5秒（約1800倍高速化）</li>
+                                    <li><strong>開発効率</strong>: テスト駆動開発が現実的に</li>
+                                    <li><strong>ストレス</strong>: 待機時間がほぼゼロに</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <h4>💡 追加のTips</h4>
+                            <ul>
+                                <li><strong>Git管理：</strong> WSL内で <code>git clone</code> し直すことで、改行コードの問題も回避できます</li>
+                                <li><strong>データベース：</strong> PostgreSQLやMySQLもWSL内にインストールすることで更に高速化</li>
+                                <li><strong>Node.js関連：</strong> <code>npm install</code> や <code>yarn install</code> も劇的に高速化</li>
+                                <li><strong>Docker：</strong> Docker DesktopのWSL2バックエンドを有効にすることで、Dockerも高速に</li>
+                            </ul>
+                        </div>
+
+                        <div class="subsection">
+                            <h4>🚨 トラブルシューティング：よくある問題と解決法</h4>
+                            
+                            <div class="important">
+                                <strong>🆘 困った時の最短解決方法</strong><br>
+                                複雑な設定で困ったら → <strong>WSL内から直接開く</strong>（確実に動く）<br>
+                                <code>cd ~/projects/techlog-app && code .</code> または <code>cursor .</code>
+                            </div>
+
+                            <h6>🔧 エディタに関するトラブル</h6>
+                            
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #667eea; font-weight: bold;">❓ 左下に「WSL: Ubuntu」が表示されない</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>症状：</strong> エディタは開くが、WSLモードになっていない</p>
+                                    <p><strong>解決策：</strong></p>
+                                    <ol>
+                                        <li><code>Ctrl+Shift+P</code> でコマンドパレット</li>
+                                        <li>「Remote-WSL: Reopen Folder in WSL」を選択</li>
+                                        <li>または一度エディタを閉じて、WSL内から <code>code .</code> で開き直す</li>
+                                    </ol>
+                                </div>
+                            </details>
+
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #667eea; font-weight: bold;">❓ Cursorで「WSL: Ubuntu」に切り替わらない</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>症状：</strong> VS Codeは大丈夫だが、Cursorが上手くいかない</p>
+                                    <p><strong>解決策：</strong></p>
+                                    <ol>
+                                        <li>WSL拡張機能をCursorにもインストール</li>
+                                        <li>WSL内から直接起動: <code>cursor .</code></li>
+                                        <li>設定を一度リセット: <code>Ctrl+,</code> → Remote設定を確認</li>
+                                    </ol>
+                                </div>
+                            </details>
+
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #667eea; font-weight: bold;">❓ ファイルが見つからない・表示されない</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>症状：</strong> エディタでプロジェクトファイルが表示されない</p>
+                                    <p><strong>解決策：</strong></p>
+                                    <ol>
+                                        <li>正しいパスにいるか確認: <code>pwd</code> コマンドで現在位置を確認</li>
+                                        <li>ファイルが実際に存在するか確認: <code>ls -la</code></li>
+                                        <li>エディタのワークスペースをリロード: <code>Ctrl+Shift+P</code> → 「Developer: Reload Window」</li>
+                                    </ol>
+                                </div>
+                            </details>
+
+                            <h6>⚙️ システム・環境に関するトラブル</h6>
+                            
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #ef4444; font-weight: bold;">🔥 Input/output error が発生</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>症状：</strong> <code>cd techlog-app</code> で「Input/output error」</p>
+                                    <p><strong>原因：</strong> シンボリックリンクが壊れている</p>
+                                    <p><strong>解決策：</strong></p>
+                                    <pre style="background: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 5px; overflow-x: auto;"><code># PowerShell（管理者権限）で実行
+# 1. 現在の状況を確認
+Get-ChildItem "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\" | Format-Table
+
+# 2. 壊れたシンボリックリンクを削除
+Remove-Item "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app" -Force
+
+# 3. 新しく作り直す
+New-Item -ItemType SymbolicLink -Path "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app" -Target "\\wsl$\Ubuntu\home\noro\projects\techlog-app"</code></pre>
+                                    <p><strong>🚀 確実な回避方法：</strong> WSL内のプロジェクト <code>~/projects/techlog-app</code> を直接使う</p>
+                                </div>
+                            </details>
+
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #ef4444; font-weight: bold;">🔥 PowerShellで「~」が効かない</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>症状：</strong> <code>cd ~/projects</code> で「パスが見つかりません」</p>
+                                    <p><strong>原因：</strong> PowerShellとbashでパスの表記が違う</p>
+                                    <p><strong>解決策：</strong></p>
+                                    <ul>
+                                        <li><strong>PowerShell：</strong> <code>cd C:\Users\noro\Desktop\...</code> （フルパス）</li>
+                                        <li><strong>WSL/bash：</strong> <code>cd ~/projects/...</code> （~ 記法）</li>
+                                        <li><strong>推奨：</strong> WSLターミナルを使う（<code>wsl</code> コマンドで起動）</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <h6>🔄 完全にやり直したい場合</h6>
+                            <details style="margin: 10px 0;">
+                                <summary style="cursor: pointer; color: #f59e0b; font-weight: bold;">⚠️ 設定を完全リセットする手順</summary>
+                                <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                                    <p><strong>注意：</strong> 以下を実行すると設定が初期状態に戻ります</p>
+                                    <pre style="background: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 5px; overflow-x: auto;"><code># 1. WSL内のプロジェクトを削除（必要に応じて）
+rm -rf ~/projects/techlog-app
+
+# 2. PowerShell（管理者権限）でシンボリックリンクを削除
+Remove-Item "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app"
+
+# 3. バックアップから復元
+Rename-Item "C:\Users\noro\Desktop\portfolio\RubyPractice\workspace\techlog-app_backup" "techlog-app"</code></pre>
+                                    <p>その後、最初からセットアップを行ってください。</p>
+                                </div>
+                            </details>
+
+                            <div class="tip" style="margin-top: 20px;">
+                                <strong>💡 トラブルを避けるコツ</strong><br>
+                                • <strong>迷ったらWSL内から開く：</strong> <code>cd ~/projects/techlog-app && code .</code><br>
+                                • <strong>左下の表示を確認：</strong> 「WSL: Ubuntu」があることを必ず確認<br>
+                                • <strong>パスの混同を避ける：</strong> PowerShellでは <code>C:\...</code>、WSLでは <code>~/</code> を使う<br>
+                                • <strong>困ったときは：</strong> エディタを一度閉じて、WSL内から開き直す
+                            </div>
+                        </div>
+                        
+                        <div class="subsection">
+                            <h4>✅ 動作確認とパフォーマンステスト</h4>
+                            <pre><code># WSL内で動作確認
+cd ~/projects/techlog-app
+
+# bundlerとnpmパッケージを再インストール
+bundle install
+npm install
+
+# Rubocopの実行時間を計測
+time bundle exec rubocop
+
+# サーバー起動
+bin/dev</code></pre>
+                            
+                            <div class="tip">
+                                <strong>VS Codeの推奨設定：</strong><br>
+                                WSL内から開く: <code>cd ~/projects/techlog-app && code .</code><br>
+                                または Windows側から: <code>Ctrl+Shift+P</code> → <code>Remote-WSL: Open Folder in WSL</code>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <h4>⚠️ 注意事項</h4>
+                            <ul>
+                                <li><strong>管理者権限：</strong> シンボリックリンク作成時のみ必要（その後は通常権限でOK）</li>
+                                <li><strong>WSL拡張機能：</strong> VS Code以外のエディタを使う場合はWSL対応の確認が必要</li>
+                                <li><strong>バックアップ：</strong> 定期的にWSL内のファイルもバックアップすることを推奨</li>
+                                <li><strong>データベース：</strong> PostgreSQL/MySQLもWSL内にインストールすると更に高速化</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="mac" class="content-panel">
@@ -751,6 +1171,13 @@ ruby hello.rb
                     • macOS: Command Line Tools がインストール済みか確認<br>
                     • 全OS: rbenv の PATH設定が正しいか確認
                 </div>
+            </div>
+        </div>
+
+        <!-- Ruby入門 -->
+        <div id="ruby-intro" class="content-section">
+            <div class="section">
+                <h2>💎 Ruby入門</h2>
                 
                 <div class="concept-box">
                     <h3>なぜRubyを学ぶべきか？</h3>
@@ -2278,14 +2705,33 @@ rails g migration CreateJoinTableUserPost user post
                 <div class="concept-box">
                     <strong>MVCだけでは不十分な現実</strong><br>
                     レストランの例でMVCを理解しましたが、実際のWebアプリケーションを考えてみましょう。<br>
-                    病院や市役所のように、来訪者は様々な目的を持ってやってきます：
+                    お客様の要望は料理を頼むだけにとどまりません：
                     <ul style="text-align: left; margin: 10px 20px;">
-                        <li>「ブログ記事を読みたい」</li>
-                        <li>「新規ユーザー登録をしたい」</li>
-                        <li>「コメントを投稿したい」</li>
-                        <li>「プロフィールを編集したい」</li>
+                        <li>「料理の説明が欲しい」 → メニュー担当へ</li>
+                        <li>「水を持ってきてほしい」 → ドリンク担当へ</li>
+                        <li>「子ども用の椅子が欲しい」 → 設備担当へ</li>
+                        <li>「予約をしたい」 → 予約管理担当へ</li>
                     </ul>
-                    これらの要望に対して、適切な専門部署（Controller）に案内する必要があります。
+                    ホールスタッフはその内容に応じて、適切な処理担当にバイパスする必要があります。
+                </div>
+
+                <div class="important">
+                    <strong>🎯 フレームワークによるアプローチの違い</strong><br>
+                    <div style="margin: 15px 0;">
+                        <strong>統合型（Java, C#など静的型付け言語）:</strong><br>
+                        • コントローラー（ホールスタッフ）が<strong>調整も処理も両方</strong>担当<br>
+                        • @GetMapping("/users/{id}")のようにコントローラーに直接ルート情報を記述<br>
+                        • 利点：型安全性が高く、IDEサポートが充実<br><br>
+                        
+                        <strong>分離型（Ruby, PHP, Pythonなど動的型付け言語）:</strong><br>
+                        • 調整部分は<strong>Routes</strong>という別クラスが担当<br>
+                        • コントローラーは純粋に処理のみに専念<br>
+                        • 利点：柔軟性が高く、ルーティングを一覧で管理可能<br><br>
+                        
+                        <strong>ハイブリッド型（Go, Rust）:</strong><br>
+                        • 統合するか分離するかを<strong>柔軟に選択可能</strong><br>
+                        • プロジェクトの規模や要件に応じて最適な方法を選べる
+                    </div>
                 </div>
                 
                 <h3>🚪 Routesの登場</h3>
@@ -2308,8 +2754,242 @@ rails g migration CreateJoinTableUserPost user post
                     </div>
                 </div>
                 
+                <div class="section" style="background: #f8fafc;">
+                    <h4>📝 主要フレームワークの実装例</h4>
+                    
+                    <div class="tag-selector">
+                        <span class="tag active" onclick="showFrameworkContent('separated-panel')">分離型</span>
+                        <span class="tag" onclick="showFrameworkContent('integrated-panel')">統合型</span>
+                        <span class="tag" onclick="showFrameworkContent('hybrid-panel')">ハイブリッド型</span>
+                    </div>
+                    
+                    <div id="separated-panel" class="content-panel active">
+                        <h5>分離型（ルーティングとコントローラーが別）</h5>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Ruby - Rails</strong>
+# config/routes.rb
+get '/users/:id', to: 'users#show'
+
+# app/controllers/users_controller.rb
+class UsersController < ApplicationController
+  def show
+    @user = User.find(params[:id])
+  end
+end
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>PHP - Laravel</strong>
+// routes/web.php
+Route::get('/users/{id}', [UserController::class, 'show']);
+
+// app/Http/Controllers/UserController.php
+public function show($id) {
+    return User::find($id);
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Python - Django</strong>
+# urls.py
+path('users/<int:id>/', views.user_detail)
+
+# views.py
+def user_detail(request, id):
+    user = User.objects.get(pk=id)
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>JavaScript - Express.js（動的型言語）</strong>
+// routes/users.js
+router.get('/:id', userController.show)
+
+// controllers/userController.js
+exports.show = (req, res) => {
+    const user = User.find(req.params.id)
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="tip">
+                            <strong>💡 ポイント</strong><br>
+                            動的型付け言語のフレームワークは、柔軟性を重視してルーティングを分離する傾向があります。
+                            設定ファイルで一括管理できるため、ルートの全体像を把握しやすくなります。
+                        </div>
+                    </div>
+                    
+                    <div id="integrated-panel" class="content-panel">
+                        <h5>統合型（コントローラーにルーティング情報を含む）</h5>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Java - Spring</strong>
+@RestController
+public class UserController {
+    @GetMapping("/users/{id}")
+    public User show(@PathVariable Long id) {
+        return userService.find(id);
+    }
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>C# - ASP.NET Core</strong>
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase {
+    [HttpGet("{id}")]
+    public User Get(int id) {
+        return userService.Find(id);
+    }
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Python - FastAPI</strong>
+@app.get("/users/{user_id}")
+async def read_user(user_id: int):
+    return {"user_id": user_id}
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>TypeScript - NestJS（JavaScriptの静的型版）</strong>
+@Controller('users')
+export class UsersController {
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.usersService.findOne(id);
+    }
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="important">
+                            <strong>🎯 JavaScript vs TypeScript の違い</strong><br>
+                            同じJavaScriptベースでも：<br>
+                            • <strong>JavaScript (Express.js)</strong>: 動的型のため分離型を採用<br>
+                            • <strong>TypeScript (NestJS)</strong>: 静的型のためデコレーター統合型を採用<br>
+                            これは型システムがフレームワーク設計に大きく影響することを示しています。
+                        </div>
+                        
+                        <div class="tip">
+                            <strong>💡 ポイント</strong><br>
+                            静的型付け言語のフレームワークは、型安全性とIDEサポートを活かすため、
+                            アノテーション/デコレーターでルートを定義する統合型を採用する傾向があります。
+                        </div>
+                    </div>
+                    
+                    <div id="hybrid-panel" class="content-panel">
+                        <h5>ハイブリッド型（両方サポート）</h5>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Go - Gin/Echo</strong>
+// 分離スタイル
+router.GET("/users/:id", userController.Show)
+
+// 統合スタイル（構造体メソッド）
+type UserController struct{}
+func (c *UserController) Show(ctx *gin.Context) {
+    id := ctx.Param("id")
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>Rust - Actix-web/Rocket</strong>
+// Actix-web（分離型）
+App::new()
+    .route("/users/{id}", web::get().to(get_user))
+
+// Rocket（統合型）
+#[get("/users/<id>")]
+fn get_user(id: i32) -> Json<User> {
+    Json(user)
+}
+                            </pre>
+                        </div>
+                        
+                        <div class="tip">
+                            <strong>💡 ポイント</strong><br>
+                            Go や Rust のような現代的な言語は、プロジェクトの要件に応じて
+                            分離型・統合型を柔軟に選択できる設計になっています。
+                            小規模なら統合型、大規模なら分離型といった使い分けが可能です。
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function showFrameworkContent(panelId) {
+                    // タグのアクティブ状態を更新
+                    const tags = document.querySelectorAll('.section .tag-selector .tag');
+                    tags.forEach(tag => {
+                        tag.classList.remove('active');
+                    });
+                    event.target.classList.add('active');
+                    
+                    // コンテンツの表示切り替え
+                    const panels = document.querySelectorAll('.section .content-panel');
+                    panels.forEach(panel => {
+                        panel.classList.remove('active');
+                    });
+                    const targetPanel = document.getElementById(panelId);
+                    if (targetPanel) {
+                        targetPanel.classList.add('active');
+                    }
+                }
+                </script>
+
+                <div class="concept-box">
+                    <h4>🏗️ フロントコントローラーパターンの実装</h4>
+                    <p>すべてのWebフレームワークは「フロントコントローラーパターン」を採用しています：</p>
+                    
+                    <table style="margin: 15px 0;">
+                        <tr>
+                            <th>フレームワーク</th>
+                            <th>フロントコントローラー</th>
+                            <th>ルーティング定義</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Rails</strong></td>
+                            <td>Rack + ActionDispatch</td>
+                            <td>config/routes.rb</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Laravel</strong></td>
+                            <td>public/index.php</td>
+                            <td>routes/*.php</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Spring (Java)</strong></td>
+                            <td>DispatcherServlet</td>
+                            <td>@RequestMapping等のアノテーション</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="tip">
+                        どのフレームワークも「すべてのリクエストを受け付ける窓口」と「振り分けルール」は分離していますが、
+                        ルールの<strong>記述場所</strong>が異なるだけです。
+                    </div>
+                </div>
+
                 <div class="flow-chart">
-                    <h4>Step 3: Routesを含む完全な流れ</h4>
+                    <h4>Step 3: Routesを含む完全な流れ（Rails版）</h4>
                     <div class="flow-item">👤 ユーザー</div>
                     <div>「/posts/1 にアクセス」</div>
                     <span class="flow-arrow">↓ HTTPリクエスト</span>
@@ -2714,7 +3394,15 @@ end
             <div class="section">
                 <h2>🎯 実践テクニック</h2>
                 
-                <h3>スキャフォールドの真実 <span class="badge beginner-badge">初心者必読</span></h3>
+                <div class="tag-selector">
+                    <span class="tag active" onclick="showAdvancedContent('dev-workflow')">開発進行</span>
+                    <span class="tag" onclick="showAdvancedContent('security')">セキュリティ</span>
+                    <span class="tag" onclick="showAdvancedContent('usability')">ユーザビリティ</span>
+                </div>
+                
+                <!-- 開発進行 -->
+                <div id="dev-workflow" class="content-panel active">
+                    <h3>スキャフォールドの真実 <span class="badge beginner-badge">初心者必読</span></h3>
                 <div class="pros-cons">
                     <div class="pros">
                         <h4>✅ メリット</h4>
@@ -2858,7 +3546,44 @@ end
                     </pre>
                 </div>
 
-                <h3>バリデーション高度テクニック <span class="badge advanced-badge">上級</span></h3>
+                    <h3>既存DBテーブルへの対応 <span class="badge advanced-badge">上級</span></h3>
+                    <div class="concept-box">
+                        <strong>既存のデータベースにRailsを導入する場合の戦略</strong>
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+# 1. 既存テーブルにモデルを作成（マイグレーションなし）
+rails generate model User --skip-migration
+
+# 2. モデルで既存テーブル名を指定
+class User < ApplicationRecord
+  # テーブル名が規約と異なる場合
+  self.table_name = "tbl_users"
+  
+  # 主キーが id 以外の場合
+  self.primary_key = "user_id"
+  
+  # 既存カラムとRailsの規約をマッピング
+  alias_attribute :created_at, :created_date
+  alias_attribute :updated_at, :modified_date
+end
+
+# 3. 既存DBからschema.rbを生成
+rake db:schema:dump
+
+# 4. 既存テーブルの構造を維持しつつ、新しいカラムを追加
+class AddColumnsToExistingTable < ActiveRecord::Migration[7.0]
+  def change
+    # 既存テーブルに新しいカラムを追加
+    add_column :tbl_users, :rails_token, :string
+    add_index :tbl_users, :rails_token, unique: true
+  end
+end
+                        </pre>
+                    </div>
+                    
+                    <h3>バリデーション高度テクニック <span class="badge advanced-badge">上級</span></h3>
                 <div class="code-box">
                     <pre>
 class User < ApplicationRecord
@@ -2924,7 +3649,1067 @@ class User < ApplicationRecord
 end
                     </pre>
                 </div>
+                </div>
+                
+                <!-- セキュリティ -->
+                <div id="security" class="content-panel">
+                    <h3>🔒 セキュリティ機能はMVCのどこに実装される？</h3>
+                    <div class="important">
+                        <strong>「既存のMVCは変えずに、どこにセキュリティを組み込むの？」という疑問への答え</strong>
+                    </div>
+                    
+                    <div class="flow-chart">
+                        <h4>セキュリティ機能の実装場所（Rails版）</h4>
+                        
+                        <div class="flow-item">👤 ユーザー</div>
+                        <div>「/admin/users にアクセス」</div>
+                        <span class="flow-arrow">↓ HTTPリクエスト</span>
+                        
+                        <div class="flow-item" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">
+                            🚪 Routes<br>
+                            <small>（ルーティング層）</small>
+                        </div>
+                        <div style="background: #fef3c7; padding: 10px; border-radius: 8px; margin: 10px 0;">
+                            <strong>❌ ここにはセキュリティは実装しない</strong><br>
+                            URLとコントローラーのマッピングのみ
+                        </div>
+                        <span class="flow-arrow">↓</span>
+                        
+                        <div class="flow-item" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                            🛡️ <strong>before_action フィルター</strong><br>
+                            <small>（コントローラーの前処理）</small>
+                        </div>
+                        <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <strong>✅ ここがセキュリティの主戦場！</strong><br>
+                            • 認証チェック（ログインしているか？）<br>
+                            • 認可チェック（管理者権限があるか？）<br>
+                            • CSRFトークンの検証<br>
+                            • セッションの有効性確認
+                        </div>
+                        <span class="flow-arrow">↓ 認証・認可をパス</span>
+                        
+                        <div class="flow-item">🤵 Controller<br><small>（実際の処理）</small></div>
+                        <span class="flow-arrow">↓</span>
+                        <div class="flow-item">👨‍🍳 Model</div>
+                        <span class="flow-arrow">↓</span>
+                        <div class="flow-item">🍽️ View</div>
+                    </div>
+                    
+                    <div class="concept-box">
+                        <h4>💡 実装の具体例：どのファイルに何を書く？</h4>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>1️⃣ app/controllers/application_controller.rb（全体の基盤）</strong>
+class ApplicationController < ActionController::Base
+  # CSRFプロテクション（自動で有効）
+  protect_from_forgery with: :exception
+  
+  # 全コントローラー共通のセキュリティメソッド
+  private
+  
+  def require_login
+    unless logged_in?
+      flash[:alert] = 'ログインが必要です'
+      redirect_to login_path
+    end
+  end
+  
+  def require_admin
+    unless current_user&.admin?
+      flash[:alert] = '管理者権限が必要です'
+      redirect_to root_path
+    end
+  end
+  
+  def logged_in?
+    !!session[:user_id]
+  end
+  
+  def current_user
+    @current_user ||= User.find_by(id: session[:user_id])
+  end
+end
+
+<strong>2️⃣ app/controllers/admin/users_controller.rb（個別のコントローラー）</strong>
+class Admin::UsersController < ApplicationController
+  # このコントローラーのすべてのアクション実行前にチェック
+  before_action :require_login  # ← ログインチェック
+  before_action :require_admin  # ← 管理者チェック
+  
+  def index
+    # ここに到達する時点で、ログイン済み＆管理者であることが保証される
+    @users = User.all
+  end
+  
+  def destroy
+    # 同様に、セキュリティチェック済み
+    User.find(params[:id]).destroy
+    redirect_to admin_users_path
+  end
+end
+
+<strong>3️⃣ config/routes.rb（ルーティング - セキュリティ無関係）</strong>
+Rails.application.routes.draw do
+  # ルーティングは単純にURLとコントローラーを紐付けるだけ
+  namespace :admin do
+    resources :users
+  end
+  
+  # セキュリティはここでは扱わない
+  resources :posts
+  get '/login', to: 'sessions#new'
+  post '/login', to: 'sessions#create'
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div class="tip">
+                        <h4>🎯 before_action の実行順序と条件分岐</h4>
+                        <div class="code-box">
+                            <pre>
+class PostsController < ApplicationController
+  # 特定のアクションだけ保護
+  before_action :require_login, only: [:new, :create, :edit, :update, :destroy]
+  # ↑ index と show は誰でも見れる
+  
+  # 所有者チェック（編集・削除時のみ）
+  before_action :check_owner, only: [:edit, :update, :destroy]
+  
+  def index
+    # ログイン不要
+    @posts = Post.all
+  end
+  
+  def show
+    # ログイン不要
+    @post = Post.find(params[:id])
+  end
+  
+  def edit
+    # require_login → check_owner の順でチェック済み
+    # @post は check_owner で設定済み
+  end
+  
+  private
+  
+  def check_owner
+    @post = Post.find(params[:id])
+    unless @post.user_id == current_user.id
+      flash[:alert] = '他のユーザーの投稿は編集できません'
+      redirect_to posts_path
+    end
+  end
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div class="warning">
+                        <h4>⚠️ よくある間違い：Routesでセキュリティを実装しようとする</h4>
+                        <div class="code-box">
+                            <pre>
+# ❌ 間違った実装（動作しない）
+Rails.application.routes.draw do
+  # Routesではセキュリティチェックはできない
+  resources :admin, if: -> { current_user.admin? }  # ← これは動かない！
+end
+
+# ✅ 正しい実装
+# Routes はシンプルに
+Rails.application.routes.draw do
+  namespace :admin do
+    resources :users
+  end
+end
+
+# セキュリティはコントローラーで
+class Admin::BaseController < ApplicationController
+  before_action :require_admin  # ← ここでチェック
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <h3>🔧 他の主要機能もMVCを汚さない仕組み</h3>
+                    <div class="concept-box">
+                        <strong>「横断的関心事（Cross-cutting concerns）」の実装戦略</strong><br>
+                        ログ、キャッシュ、国際化、エラーハンドリングなど、MVCの各層に跨る機能をどう実装する？
+                    </div>
+                    
+                    <div class="flow-chart">
+                        <h4>Rails における横断的関心事の実装場所</h4>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin: 20px 0;">
+                            <!-- 左側：MVC図 -->
+                            <div style="text-align: center;">
+                                <div class="flow-item layer-item" 
+                                     style="background: #f59e0b; cursor: pointer;" 
+                                     data-layer="routes"
+                                     onmouseover="highlightLayer('routes')"
+                                     onmouseout="unhighlightAll()">
+                                    Routes
+                                </div>
+                                <span class="flow-arrow">↓</span>
+                                <div class="flow-item layer-item" 
+                                     style="background: #ef4444; cursor: pointer;" 
+                                     data-layer="middleware"
+                                     onmouseover="highlightLayer('middleware')"
+                                     onmouseout="unhighlightAll()">
+                                    Middleware
+                                </div>
+                                <span class="flow-arrow">↓</span>
+                                <div class="flow-item layer-item" 
+                                     style="background: #8b5cf6; cursor: pointer;" 
+                                     data-layer="filter"
+                                     onmouseover="highlightLayer('filter')"
+                                     onmouseout="unhighlightAll()">
+                                    before_action
+                                </div>
+                                <span class="flow-arrow">↓</span>
+                                <div class="flow-item layer-item" 
+                                     style="background: #10b981; cursor: pointer;" 
+                                     data-layer="controller"
+                                     onmouseover="highlightLayer('controller')"
+                                     onmouseout="unhighlightAll()">
+                                    Controller
+                                </div>
+                                <span class="flow-arrow">↓</span>
+                                <div class="flow-item layer-item" 
+                                     style="background: #3b82f6; cursor: pointer;" 
+                                     data-layer="model"
+                                     onmouseover="highlightLayer('model')"
+                                     onmouseout="unhighlightAll()">
+                                    Model
+                                </div>
+                                <span class="flow-arrow">↓</span>
+                                <div class="flow-item layer-item" 
+                                     style="background: #f97316; cursor: pointer;" 
+                                     data-layer="view"
+                                     onmouseover="highlightLayer('view')"
+                                     onmouseout="unhighlightAll()">
+                                    View
+                                </div>
+                            </div>
+                            
+                            <!-- 右側：機能配置 -->
+                            <div style="text-align: left;">
+                                <div class="layer-description" 
+                                     data-layer="routes"
+                                     style="background: #fef3c7; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('routes')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>ルーティング層</strong><br>
+                                    <small>• URL制約、サブドメイン分岐</small>
+                                </div>
+                                <div class="layer-description" 
+                                     data-layer="middleware"
+                                     style="background: #fecaca; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('middleware')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>ミドルウェア層</strong><br>
+                                    <small>• CORS、リクエスト圧縮、セッション管理</small>
+                                </div>
+                                <div class="layer-description" 
+                                     data-layer="filter"
+                                     style="background: #ddd6fe; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('filter')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>フィルター層</strong><br>
+                                    <small>• 認証、ログ、キャッシュ、国際化</small>
+                                </div>
+                                <div class="layer-description" 
+                                     data-layer="controller"
+                                     style="background: #dcfce7; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('controller')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>コントローラー層</strong><br>
+                                    <small>• 業務ロジック、エラーハンドリング</small>
+                                </div>
+                                <div class="layer-description" 
+                                     data-layer="model"
+                                     style="background: #dbeafe; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('model')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>モデル層</strong><br>
+                                    <small>• バリデーション、コールバック、トランザクション</small>
+                                </div>
+                                <div class="layer-description" 
+                                     data-layer="view"
+                                     style="background: #fed7aa; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; transition: all 0.3s ease;"
+                                     onmouseover="highlightLayer('view')"
+                                     onmouseout="unhighlightAll()">
+                                    <strong>ビュー層</strong><br>
+                                    <small>• ヘルパー、パーシャル、レイアウト</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tag-selector">
+                        <span class="tag active" onclick="showConcernContent('logging')">ログ出力</span>
+                        <span class="tag" onclick="showConcernContent('caching')">キャッシュ</span>
+                        <span class="tag" onclick="showConcernContent('i18n')">国際化</span>
+                        <span class="tag" onclick="showConcernContent('validation')">バリデーション</span>
+                        <span class="tag" onclick="showConcernContent('comparison')">他FW比較</span>
+                    </div>
+                    
+                    <div id="logging" class="content-panel active">
+                        <h4>📝 ログ出力の実装</h4>
+                        <div class="code-box">
+                            <pre>
+<strong>1️⃣ 自動ログ（MVCに手を加えない）</strong>
+# config/application.rb で設定するだけ
+config.log_level = :info
+
+# 自動的にすべてのSQL、リクエスト、レンダリング時間が記録される
+Started GET "/posts/1" for 127.0.0.1
+Processing by PostsController#show as HTML
+  Parameters: {"id"=>"1"}
+  Post Load (0.2ms) SELECT "posts".* FROM "posts" WHERE "posts"."id" = ?
+  Rendered posts/show.html.erb within layouts/application (2.3ms)
+Completed 200 OK in 15ms (Views: 12.1ms | ActiveRecord: 0.2ms)
+
+<strong>2️⃣ カスタムログ（before_actionで追加）</strong>
+class ApplicationController < ActionController::Base
+  before_action :log_user_activity
+  
+  private
+  
+  def log_user_activity
+    if current_user
+      Rails.logger.info "User #{current_user.id} accessed #{request.path}"
+      # MVCの処理には一切影響しない
+    end
+  end
+end
+
+<strong>3️⃣ モデルでの自動ログ（コールバック使用）</strong>
+class User < ApplicationRecord
+  after_update :log_profile_change
+  
+  private
+  
+  def log_profile_change
+    Rails.logger.info "User #{id} updated profile: #{changes}"
+    # 業務ロジックとは分離
+  end
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div id="caching" class="content-panel">
+                        <h4>⚡ キャッシュの実装</h4>
+                        <div class="code-box">
+                            <pre>
+<strong>1️⃣ ページキャッシュ（before_action）</strong>
+class PostsController < ApplicationController
+  before_action :set_cache_headers, only: [:show]
+  
+  def show
+    @post = Post.find(params[:id])
+    # キャッシュロジックはbefore_actionに隠蔽
+  end
+  
+  private
+  
+  def set_cache_headers
+    expires_in 1.hour, public: true
+  end
+end
+
+<strong>2️⃣ フラグメントキャッシュ（View層）</strong>
+<!-- app/views/posts/index.html.erb -->
+<% @posts.each do |post| %>
+  <% cache post do %>
+    <!-- この部分がキャッシュされる -->
+    <div class="post">
+      <h3><%= post.title %></h3>
+      <p><%= post.content %></p>
+    </div>
+  <% end %>
+<% end %>
+
+<strong>3️⃣ データキャッシュ（Model層）</strong>
+class Post < ApplicationRecord
+  def self.popular_posts
+    Rails.cache.fetch("popular_posts", expires_in: 1.hour) do
+      # 重い処理の結果をキャッシュ
+      joins(:likes).group('posts.id').order('COUNT(likes.id) DESC').limit(10)
+    end
+  end
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div id="i18n" class="content-panel">
+                        <h4>🌐 国際化（I18n）の実装</h4>
+                        <div class="code-box">
+                            <pre>
+<strong>1️⃣ 言語切り替え（before_action）</strong>
+class ApplicationController < ActionController::Base
+  before_action :set_locale
+  
+  private
+  
+  def set_locale
+    I18n.locale = params[:locale] || I18n.default_locale
+    # コントローラーの処理は一切変更不要
+  end
+end
+
+<strong>2️⃣ View での翻訳</strong>
+<!-- MVCロジックは変更せず、表示のみ多言語化 -->
+<h1><%= t('posts.index.title') %></h1>
+<%= link_to t('posts.new.link'), new_post_path %>
+
+<!-- config/locales/ja.yml -->
+ja:
+  posts:
+    index:
+      title: "投稿一覧"
+    new:
+      link: "新規投稿"
+
+<strong>3️⃣ モデルでの多言語バリデーション</strong>
+class Post < ApplicationRecord
+  validates :title, presence: { message: I18n.t('errors.messages.blank') }
+  # バリデーションロジック自体は変わらない
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div id="validation" class="content-panel">
+                        <h4>✅ バリデーションの実装</h4>
+                        <div class="code-box">
+                            <pre>
+<strong>1️⃣ モデル層でのデータ整合性</strong>
+class User < ApplicationRecord
+  # ビジネスロジックから分離されたデータ制約
+  validates :email, presence: true, uniqueness: true
+  validates :age, numericality: { greater_than: 0 }
+  
+  # カスタムバリデーション（業務ルール）
+  validate :adult_email_format
+  
+  private
+  
+  def adult_email_format
+    if age.present? && age >= 18 && email.present?
+      unless email.match?(/\A[^@\s]+@[^@\s]+\z/)
+        errors.add(:email, '成人の方は正式なメールアドレスが必要です')
+      end
+    end
+  end
+end
+
+<strong>2️⃣ コントローラーでのリクエスト検証</strong>
+class PostsController < ApplicationController
+  before_action :validate_post_owner, only: [:edit, :update, :destroy]
+  
+  def update
+    # バリデーション通過後の業務ロジック
+    if @post.update(post_params)
+      redirect_to @post
+    else
+      render :edit  # バリデーションエラーは自動表示
+    end
+  end
+  
+  private
+  
+  def validate_post_owner
+    @post = Post.find(params[:id])
+    unless @post.user == current_user
+      redirect_to posts_path, alert: '権限がありません'
+    end
+  end
+end
+
+<strong>3️⃣ フロントエンド連携（自動生成）</strong>
+<!-- Rails が自動でクライアントサイドバリデーションを生成 -->
+<%= form_with model: @user do |form| %>
+  <%= form.email_field :email, required: true %>
+  <!-- HTML5 validation + Rails validation の二重チェック -->
+<% end %>
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div id="comparison" class="content-panel">
+                        <h4>🔄 他のフレームワークとの比較</h4>
+                        
+                        <table style="width: 100%; margin: 15px 0;">
+                            <tr>
+                                <th>機能</th>
+                                <th>Rails</th>
+                                <th>Spring (Java)</th>
+                                <th>ASP.NET Core</th>
+                                <th>Django</th>
+                            </tr>
+                            <tr>
+                                <td><strong>認証・認可</strong></td>
+                                <td>before_action フィルター</td>
+                                <td>@PreAuthorize アノテーション</td>
+                                <td>[Authorize] アトリビュート</td>
+                                <td>@login_required デコレーター</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ログ出力</strong></td>
+                                <td>Rails.logger + before_action</td>
+                                <td>@Slf4j + AOP</td>
+                                <td>ILogger + ActionFilter</td>
+                                <td>logging + middleware</td>
+                            </tr>
+                            <tr>
+                                <td><strong>キャッシュ</strong></td>
+                                <td>Rails.cache + fragment</td>
+                                <td>@Cacheable アノテーション</td>
+                                <td>[ResponseCache] + IMemoryCache</td>
+                                <td>@cache_page デコレーター</td>
+                            </tr>
+                            <tr>
+                                <td><strong>トランザクション</strong></td>
+                                <td>ActiveRecord::Base.transaction</td>
+                                <td>@Transactional アノテーション</td>
+                                <td>[Transaction] + DbContext</td>
+                                <td>@transaction.atomic デコレーター</td>
+                            </tr>
+                            <tr>
+                                <td><strong>バリデーション</strong></td>
+                                <td>validates + before_action</td>
+                                <td>@Valid + BindingResult</td>
+                                <td>[Required] + ModelState</td>
+                                <td>forms.Form + clean_*</td>
+                            </tr>
+                        </table>
+                        
+                        <div class="important">
+                            <h4>🎯 共通するパターン：「関心の分離」</h4>
+                            <ul style="text-align: left; margin: 10px 0;">
+                                <li><strong>デコレーター/アノテーション</strong>：Java, C# は型安全性を活かした宣言的な実装</li>
+                                <li><strong>フィルター/ミドルウェア</strong>：動的言語は実行時の柔軟性を活かした実装</li>
+                                <li><strong>AOP（Aspect-Oriented Programming）</strong>：全言語で横断的関心事を分離</li>
+                                <li><strong>設定ファイル分離</strong>：ビジネスロジックと環境設定の完全分離</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="code-box">
+                            <pre>
+<strong>同じ機能の実装比較例：「ログイン必須チェック」</strong>
+
+<strong>Rails (Ruby)</strong>
+class PostsController < ApplicationController
+  before_action :require_login, only: [:new, :create]
+end
+
+<strong>Spring Boot (Java)</strong>
+@RestController
+public class PostsController {
+  @PreAuthorize("isAuthenticated()")
+  @PostMapping("/posts")
+  public ResponseEntity<Post> create(@RequestBody Post post) { }
+}
+
+<strong>ASP.NET Core (C#)</strong>
+[ApiController]
+public class PostsController : ControllerBase {
+  [Authorize]
+  [HttpPost]
+  public IActionResult Create([FromBody] Post post) { }
+}
+
+<strong>Django (Python)</strong>
+class PostsView(View):
+  @method_decorator(login_required)
+  def post(self, request):
+      pass
+                            </pre>
+                        </div>
+                        
+                        <div class="tip">
+                            <strong>💡 設計思想の収束</strong><br>
+                            異なる言語・フレームワークでも、「MVCを汚さずに横断的機能を実装する」という課題に対して、
+                            同じような解決策（フィルター、アノテーション、ミドルウェア）に収束しています。
+                            これは優れた設計パターンの証拠です。
+                        </div>
+                    </div>
+                    
+                    <script>
+                    function showConcernContent(panelId) {
+                        // タグのアクティブ状態を更新
+                        const tags = document.querySelectorAll('#security .tag-selector .tag');
+                        tags.forEach(tag => {
+                            tag.classList.remove('active');
+                        });
+                        event.target.classList.add('active');
+                        
+                        // コンテンツの表示切り替え
+                        const panels = document.querySelectorAll('#security .content-panel');
+                        panels.forEach(panel => {
+                            if (panel.id === 'logging' || panel.id === 'caching' || panel.id === 'i18n' || panel.id === 'validation' || panel.id === 'comparison') {
+                                panel.classList.remove('active');
+                            }
+                        });
+                        const targetPanel = document.getElementById(panelId);
+                        if (targetPanel) {
+                            targetPanel.classList.add('active');
+                        }
+                    }
+                    
+                    function highlightLayer(layerName) {
+                        // すべてをリセット
+                        unhighlightAll();
+                        
+                        // 対応する要素をハイライト
+                        const layerItems = document.querySelectorAll(`[data-layer="${layerName}"]`);
+                        layerItems.forEach(item => {
+                            item.style.transform = 'scale(1.05)';
+                            item.style.boxShadow = '0 5px 20px rgba(0,0,0,0.3)';
+                            item.style.borderLeft = '5px solid #ef4444';
+                            item.style.fontWeight = 'bold';
+                        });
+                        
+                        // 矢印も強調
+                        const arrows = document.querySelectorAll('.flow-arrow');
+                        arrows.forEach(arrow => {
+                            arrow.style.opacity = '0.3';
+                        });
+                        
+                        // 該当する矢印のみ強調
+                        const layerIndex = getLayerIndex(layerName);
+                        if (layerIndex >= 0 && layerIndex < arrows.length) {
+                            arrows[layerIndex].style.opacity = '1';
+                            arrows[layerIndex].style.fontSize = '35px';
+                            arrows[layerIndex].style.color = '#ef4444';
+                        }
+                    }
+                    
+                    function unhighlightAll() {
+                        // すべての層要素をリセット
+                        const allLayerItems = document.querySelectorAll('.layer-item, .layer-description');
+                        allLayerItems.forEach(item => {
+                            item.style.transform = '';
+                            item.style.boxShadow = '';
+                            item.style.borderLeft = '';
+                            item.style.fontWeight = '';
+                        });
+                        
+                        // 矢印をリセット
+                        const arrows = document.querySelectorAll('.flow-arrow');
+                        arrows.forEach(arrow => {
+                            arrow.style.opacity = '';
+                            arrow.style.fontSize = '';
+                            arrow.style.color = '';
+                        });
+                    }
+                    
+                    function getLayerIndex(layerName) {
+                        const layers = ['routes', 'middleware', 'filter', 'controller', 'model', 'view'];
+                        return layers.indexOf(layerName);
+                    }
+                    </script>
+                    
+                    <h3>PRGパターン（Post-Redirect-Get） <span class="badge">セキュリティ基本</span></h3>
+                    <div class="concept-box">
+                        <strong>フォーム送信後のページ更新問題を防ぐパターン</strong><br>
+                        POSTリクエスト後は必ずリダイレクトして、二重送信を防ぎます。
+                    </div>
+                    
+                    <div class="flow-chart">
+                        <div class="flow-item">1. POST送信</div>
+                        <span class="flow-arrow">↓</span>
+                        <div class="flow-item" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);">2. データ処理</div>
+                        <span class="flow-arrow">↓</span>
+                        <div class="flow-item" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">3. リダイレクト</div>
+                        <span class="flow-arrow">↓</span>
+                        <div class="flow-item">4. GET表示</div>
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+class PostsController < ApplicationController
+  def create
+    @post = Post.new(post_params)
+    
+    if @post.save
+      # ✅ PRGパターン：保存後はリダイレクト
+      redirect_to @post, notice: '投稿を作成しました'
+    else
+      # ❌ エラー時は render でフォーム再表示（リダイレクトしない）
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
+  # ❌ 悪い例：POSTのまま表示
+  def bad_create
+    @post = Post.create(post_params)
+    # renderだとURLがPOSTのまま残り、更新で二重送信される
+    render :show
+  end
+end
+                        </pre>
+                    </div>
+                    
+                    <h3>CSRF対策 <span class="badge">セキュリティ必須</span></h3>
+                    <div class="warning">
+                        <strong>Cross-Site Request Forgery（クロスサイトリクエストフォージェリ）</strong><br>
+                        悪意のあるサイトから、ユーザーの意図しないリクエストを送信させる攻撃
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+# ApplicationControllerでCSRF保護を有効化（デフォルトで有効）
+class ApplicationController < ActionController::Base
+  protect_from_forgery with: :exception
+  
+  # APIの場合は null_session を使用
+  # protect_from_forgery with: :null_session
+end
+
+# フォームには自動でCSRFトークンが埋め込まれる
+<%= form_with model: @user do |form| %>
+  <!-- 自動的に以下が生成される -->
+  <!-- <input type="hidden" name="authenticity_token" value="..." /> -->
+  <%= form.text_field :name %>
+  <%= form.submit %>
+<% end %>
+
+# Ajaxリクエストの場合
+$.ajax({
+  url: '/posts',
+  type: 'POST',
+  headers: {
+    'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+  },
+  data: { title: 'New Post' }
+});
+                        </pre>
+                    </div>
+                    
+                    <h3>認証・認可の実装 <span class="badge advanced-badge">上級</span></h3>
+                    
+                    <div class="tip">
+                        <h4>🔐 シングルサインオン（SSO）の実装</h4>
+                        <div class="code-box">
+                            <pre>
+# Gemfile
+gem 'omniauth'
+gem 'omniauth-google-oauth2'
+gem 'omniauth-github'
+gem 'omniauth-rails_csrf_protection'
+
+# config/initializers/omniauth.rb
+Rails.application.config.middleware.use OmniAuth::Builder do
+  provider :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET']
+  provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
+end
+
+# SessionsController
+class SessionsController < ApplicationController
+  def omniauth
+    auth = request.env['omniauth.auth']
+    user = User.find_or_create_by(email: auth.info.email) do |u|
+      u.name = auth.info.name
+      u.provider = auth.provider
+      u.uid = auth.uid
+    end
+    
+    session[:user_id] = user.id
+    redirect_to root_path, notice: 'ログインしました'
+  end
+end
+                            </pre>
+                        </div>
+                    </div>
+                    
+                    <div class="important">
+                        <h4>🛡️ リスクベース認証の実装</h4>
+                        <p>不審なログイン試行を検知して追加認証を要求</p>
+                        <div class="code-box">
+                            <pre>
+class SessionsController < ApplicationController
+  def create
+    user = User.find_by(email: params[:email])
+    
+    if user&.authenticate(params[:password])
+      # リスク評価
+      risk_score = calculate_risk_score(user, request)
+      
+      if risk_score > 0.7
+        # 高リスク：2要素認証を要求
+        session[:pending_user_id] = user.id
+        user.send_verification_code!
+        redirect_to verify_path
+      elsif risk_score > 0.4
+        # 中リスク：メール通知
+        user.notify_suspicious_login(request)
+        sign_in(user)
+      else
+        # 低リスク：通常ログイン
+        sign_in(user)
+      end
+    else
+      flash.now[:alert] = 'メールアドレスまたはパスワードが違います'
+      render :new
+    end
+  end
+  
+  private
+  
+  def calculate_risk_score(user, request)
+    score = 0.0
+    
+    # 新しいIPアドレスからのアクセス
+    unless user.known_ips.include?(request.remote_ip)
+      score += 0.3
+    end
+    
+    # 新しいデバイス/ブラウザ
+    unless user.known_user_agents.include?(request.user_agent)
+      score += 0.2
+    end
+    
+    # 異常な時間帯
+    if Time.current.hour.between?(2, 5)
+      score += 0.2
+    end
+    
+    # 地理的に離れた場所からのアクセス
+    if user.last_location && distance_from_last_location > 1000
+      score += 0.3
+    end
+    
+    # 連続ログイン失敗
+    if user.failed_login_count > 3
+      score += 0.4
+    end
+    
+    [score, 1.0].min
+  end
+end
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ユーザビリティ -->
+                <div id="usability" class="content-panel">
+                    <h3>ログイン状態の保持 <span class="badge">UX向上</span></h3>
+                    <div class="concept-box">
+                        <strong>「ログイン状態を保持する」機能の実装</strong><br>
+                        セキュアなRemember Me機能でユーザビリティを向上
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+class User < ApplicationRecord
+  has_secure_password
+  
+  # Remember Token の生成と保存
+  def remember
+    self.remember_token = SecureRandom.urlsafe_base64
+    update_column(:remember_digest, digest(remember_token))
+  end
+  
+  # Remember Token の検証
+  def authenticated?(remember_token)
+    return false if remember_digest.nil?
+    BCrypt::Password.new(remember_digest).is_password?(remember_token)
+  end
+  
+  # ログアウト時の処理
+  def forget
+    update_column(:remember_digest, nil)
+  end
+  
+  private
+  
+  def digest(string)
+    cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
+    BCrypt::Password.create(string, cost: cost)
+  end
+end
+
+class SessionsController < ApplicationController
+  def create
+    user = User.find_by(email: params[:email])
+    
+    if user&.authenticate(params[:password])
+      log_in(user)
+      
+      # 「ログイン状態を保持する」にチェックがある場合
+      if params[:remember_me] == '1'
+        remember(user)
+      else
+        forget(user)
+      end
+      
+      redirect_back_or root_path
+    else
+      render :new
+    end
+  end
+  
+  private
+  
+  def remember(user)
+    user.remember
+    cookies.permanent.encrypted[:user_id] = user.id
+    cookies.permanent[:remember_token] = user.remember_token
+  end
+  
+  def forget(user)
+    user.forget
+    cookies.delete(:user_id)
+    cookies.delete(:remember_token)
+  end
+end
+                        </pre>
+                    </div>
+                    
+                    <h3>ログイン前ページへのリダイレクト <span class="badge">UX必須</span></h3>
+                    <div class="tip">
+                        <strong>ログイン後、元のページに戻る機能</strong><br>
+                        ユーザーが保護されたページにアクセス → ログイン画面 → ログイン後に元のページへ
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+class ApplicationController < ActionController::Base
+  before_action :require_login
+  
+  private
+  
+  def require_login
+    unless logged_in?
+      store_location
+      flash[:alert] = 'ログインが必要です'
+      redirect_to login_path
+    end
+  end
+  
+  # アクセスしようとしたURLを保存
+  def store_location
+    session[:forwarding_url] = request.original_url if request.get?
+  end
+end
+
+class SessionsController < ApplicationController
+  skip_before_action :require_login, only: [:new, :create]
+  
+  def create
+    user = User.find_by(email: params[:email])
+    
+    if user&.authenticate(params[:password])
+      log_in(user)
+      redirect_back_or(user)
+    else
+      render :new
+    end
+  end
+  
+  private
+  
+  # 保存されたURLか、デフォルトURLにリダイレクト
+  def redirect_back_or(default)
+    redirect_to(session[:forwarding_url] || default)
+    session.delete(:forwarding_url)
+  end
+end
+
+# 特定のページのみ保護したい場合
+class PostsController < ApplicationController
+  skip_before_action :require_login, only: [:index, :show]
+  before_action :require_login, only: [:new, :create, :edit, :update, :destroy]
+  
+  # ...
+end
+                        </pre>
+                    </div>
+                    
+                    <h3>セッション管理のベストプラクティス <span class="badge advanced-badge">上級</span></h3>
+                    <div class="warning">
+                        <strong>セッションのセキュリティ設定</strong>
+                    </div>
+                    
+                    <div class="code-box">
+                        <pre>
+# config/initializers/session_store.rb
+Rails.application.config.session_store :cookie_store,
+  key: '_myapp_session',
+  secure: Rails.env.production?,  # HTTPSでのみ送信
+  httponly: true,                  # JavaScriptからアクセス不可
+  same_site: :lax,                 # CSRF攻撃対策
+  expire_after: 30.minutes         # セッションの有効期限
+
+# ApplicationController
+class ApplicationController < ActionController::Base
+  # セッションタイムアウトの実装
+  before_action :check_session_timeout
+  
+  private
+  
+  def check_session_timeout
+    if logged_in?
+      if session[:last_seen] && session[:last_seen] < 30.minutes.ago
+        reset_session
+        flash[:alert] = 'セッションがタイムアウトしました'
+        redirect_to login_path
+      else
+        session[:last_seen] = Time.current
+      end
+    end
+  end
+  
+  # 同時ログイン制限
+  def enforce_single_session
+    if current_user && current_user.session_token != session[:session_token]
+      reset_session
+      flash[:alert] = '別の場所からログインされました'
+      redirect_to login_path
+    end
+  end
+end
+                        </pre>
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>💡 実装のポイント</strong>
+                        <ul style="text-align: left; margin: 10px 0;">
+                            <li>セッションはデータベースに保存することも可能（ActiveRecord Session Store）</li>
+                            <li>重要な操作前には再認証を要求する</li>
+                            <li>ログイン履歴を記録して不審なアクセスを検知</li>
+                            <li>定期的にセッションIDを再生成してセッション固定攻撃を防ぐ</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
+            
+            <script>
+            function showAdvancedContent(panelId) {
+                // タグのアクティブ状態を更新
+                const tags = document.querySelectorAll('#advanced .tag-selector .tag');
+                tags.forEach(tag => {
+                    tag.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                // コンテンツの表示切り替え
+                const panels = document.querySelectorAll('#advanced .content-panel');
+                panels.forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                const targetPanel = document.getElementById(panelId);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                }
+            }
+            </script>
             
             <div style="text-align: center; margin-top: 30px;">
                 <button onclick="showMainContent('resources')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
@@ -3110,6 +4895,718 @@ end
                 <button onclick="showMainContent('ruby-intro')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: all 0.3s ease;">
                     最初に戻る ↺
                 </button>
+            </div>
+        </div>
+        
+        <!-- テスト・品質管理 -->
+        <div id="testing-tools" class="content-section">
+            <div class="section" id="test-frameworks">
+                <h2>🧪 テスト・品質管理ツール</h2>
+                
+                <h3>🔬 テストフレームワーク</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">主要なテストツール</span>
+                    </div>
+                    <pre><code><span class="comment"># Gemfile</span>
+group :test do
+  gem 'rspec-rails'        # BDD形式テストフレームワーク
+  gem 'capybara'          # E2Eテスト用ブラウザ操作
+  gem 'factory_bot_rails' # テストデータ生成
+  gem 'database_cleaner-active_record' # テストDB管理
+  gem 'vcr'               # 外部APIレスポンスの記録・再生
+  gem 'webmock'           # HTTPリクエストのモック化
+  gem 'shoulda-matchers'  # RSpec用マッチャー集
+  gem 'faker'             # 偽データ生成
+  gem 'timecop'           # 時間制御（テスト用）
+end</code></pre>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 RSpec vs Minitest</h4>
+                    <p><strong>RSpec</strong>: BDD形式、記述的でわかりやすいDSL、豊富なマッチャー</p>
+                    <p><strong>Minitest</strong>: Rails標準、シンプル、高速、学習コストが低い</p>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">RSpec基本例</span>
+                    </div>
+                    <pre><code><span class="comment"># spec/models/user_spec.rb</span>
+require 'rails_helper'
+
+RSpec.describe User, type: :model do
+  describe 'validations' do
+    it { should validate_presence_of(:name) }
+    it { should validate_uniqueness_of(:email) }
+    it { should validate_length_of(:password).is_at_least(6) }
+  end
+
+  describe 'associations' do
+    it { should have_many(:posts).dependent(:destroy) }
+  end
+
+  describe '#full_name' do
+    let(:user) { build(:user, first_name: 'John', last_name: 'Doe') }
+    
+    it 'returns the full name' do
+      expect(user.full_name).to eq('John Doe')
+    end
+  end
+end</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">Capybara E2Eテスト例</span>
+                    </div>
+                    <pre><code><span class="comment"># spec/features/user_registration_spec.rb</span>
+require 'rails_helper'
+
+RSpec.feature 'User Registration', type: :feature do
+  scenario 'successful registration' do
+    visit new_user_registration_path
+    
+    fill_in 'Email', with: 'test@example.com'
+    fill_in 'Password', with: 'password123'
+    fill_in 'Password confirmation', with: 'password123'
+    
+    click_button 'Sign up'
+    
+    expect(page).to have_content('Welcome! You have signed up successfully.')
+    expect(current_path).to eq(root_path)
+  end
+end</code></pre>
+                </div>
+
+                <h3>🔍 静的解析・コード品質</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">RuboCop設定</span>
+                    </div>
+                    <pre><code><span class="comment"># Gemfile</span>
+group :development do
+  gem 'rubocop', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec', require: false
+  gem 'rubocop-performance', require: false
+  gem 'reek'                    # コードの臭い検出
+  gem 'brakeman'               # セキュリティ脆弱性検査
+  gem 'rails_best_practices'   # Railsベストプラクティス
+end
+
+<span class="comment"># .rubocop.yml</span>
+require:
+  - rubocop-rails
+  - rubocop-rspec
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  Exclude:
+    - 'db/schema.rb'
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 120</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">コマンド例</span>
+                    </div>
+                    <pre><code><span class="comment"># コード品質チェック</span>
+bundle exec rubocop                    # スタイルチェック
+bundle exec rubocop -a                 # 自動修正
+bundle exec reek app/                  # コードの臭い検出
+bundle exec brakeman                   # セキュリティチェック
+bundle exec rails_best_practices .     # ベストプラクティスチェック
+
+<span class="comment"># テスト実行</span>
+bundle exec rspec                      # 全テスト実行
+bundle exec rspec spec/models/         # モデルテストのみ
+bundle exec rspec --format documentation # 詳細出力</code></pre>
+                </div>
+
+                <h3>🛠️ 開発支援Gem</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">便利な開発用Gem</span>
+                    </div>
+                    <pre><code><span class="comment"># Gemfile</span>
+group :development do
+  <span class="comment"># デバッグ・開発支援</span>
+  gem 'pry-rails'              # 強力なデバッガー
+  gem 'pry-byebug'            # ステップ実行
+  gem 'better_errors'         # エラー画面改善
+  gem 'binding_of_caller'     # better_errorsでREPL使用
+
+  <span class="comment"># パフォーマンス・最適化</span>
+  gem 'bullet'                # N+1問題検出
+  gem 'rack-mini-profiler'    # パフォーマンス分析
+  gem 'memory_profiler'       # メモリ使用量分析
+  
+  <span class="comment"># コード支援</span>
+  gem 'annotate'              # モデルにスキーマ情報追加
+  gem 'letter_opener'         # 開発環境でメール確認
+  gem 'listen'                # ファイル変更検知
+  
+  <span class="comment"># 高速化</span>
+  gem 'bootsnap', require: false    # 起動高速化
+  gem 'spring'                      # プリローダー
+  gem 'spring-watcher-listen'       # Spring用ファイル監視
+end
+
+group :test do
+  gem 'simplecov', require: false   # カバレッジ測定
+  gem 'simplecov-html'             # HTML形式レポート
+end</code></pre>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 開発効率化のTips</h4>
+                    <p><strong>Bullet</strong>: N+1問題を自動検出してアラート表示</p>
+                    <p><strong>Annotate</strong>: `rails g annotate:install`でモデルに自動でスキーマ情報追加</p>
+                    <p><strong>Letter Opener</strong>: 送信メールをブラウザで確認可能</p>
+                    <p><strong>Pry</strong>: `binding.pry`でブレークポイント設置、IRBより高機能</p>
+                </div>
+
+            </div>
+            
+
+                <h3>⚡ パフォーマンス最適化</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">パフォーマンス分析</span>
+                    </div>
+                    <pre><code><span class="comment"># メモリ使用量分析</span>
+gem 'derailed_benchmarks'
+
+<span class="comment"># 使用例</span>
+<span class="comment"># コントローラーアクションのメモリ使用量測定</span>
+bundle exec derailed exec perf:mem_over_time
+
+<span class="comment"># アプリ起動時のメモリ使用量</span>
+bundle exec derailed bundle:mem
+
+<span class="comment"># Rack Mini Profiler（開発環境で自動有効）</span>
+<span class="comment"># URL末尾に ?pp=help でヘルプ表示</span>
+<span class="comment"># ?pp=disable で無効化</span></code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">N+1問題対策例</span>
+                    </div>
+                    <pre><code><span class="comment"># ❌ N+1問題のあるコード</span>
+@users = User.all
+@users.each do |user|
+  puts user.posts.count  # 各userに対してクエリが発行される
+end
+
+<span class="comment"># ✅ includes で解決</span>
+@users = User.includes(:posts)
+@users.each do |user|
+  puts user.posts.count  # 事前に読み込み済み
+end
+
+<span class="comment"># ✅ counter_cache でさらに最適化</span>
+class User < ApplicationRecord
+  has_many :posts
+end
+
+class Post < ApplicationRecord
+  belongs_to :user, counter_cache: true  # posts_count カラム必要
+end</code></pre>
+                </div>
+
+                <h3>🚀 CI/CD統合</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">GitHub Actions設定例</span>
+                    </div>
+                    <pre><code><span class="comment"># .github/workflows/test.yml</span>
+name: Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.2
+        bundler-cache: true
+        
+    - name: Setup Database
+      run: |
+        bundle exec rails db:create
+        bundle exec rails db:migrate
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
+        
+    - name: Run RuboCop
+      run: bundle exec rubocop
+      
+    - name: Run Security Check
+      run: bundle exec brakeman
+      
+    - name: Run Tests
+      run: bundle exec rspec
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test</code></pre>
+                </div>
+
+                <div class="warning">
+                    <h4>⚠️ テスト運用の注意点</h4>
+                    <ul>
+                        <li><strong>テストデータベース分離</strong>: 本番・開発・テストでDB完全分離</li>
+                        <li><strong>外部API依存排除</strong>: VCRやWebMockで外部通信を記録・モック化</li>
+                        <li><strong>テスト実行時間</strong>: 遅いテストは並列実行やFactory最適化で改善</li>
+                        <li><strong>カバレッジ目標</strong>: 80-90%を目指すが、100%に固執しない</li>
+                    </ul>
+                </div>
+
+                <h3>🌐 他言語のテストツール比較</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">JavaScript/TypeScript</span>
+                    </div>
+                    <pre><code><span class="comment"># 単体テスト</span>
+- <strong>Jest</strong>: Facebook製、最も人気、スナップショットテスト対応
+- <strong>Vitest</strong>: Vite対応、高速、Jest互換API
+- <strong>Mocha + Chai</strong>: 柔軟、プラガブル
+
+<span class="comment"># E2Eテスト</span>
+- <strong>Playwright</strong>: Microsoft製、複数ブラウザ対応、自動待機
+- <strong>Cypress</strong>: デバッグしやすい、時間旅行デバッグ
+- <strong>Puppeteer</strong>: Chrome自動化、ヘッドレス対応
+
+<span class="comment"># Jest例</span>
+describe('Calculator', () => {
+  test('adds 1 + 2 to equal 3', () => {
+    expect(add(1, 2)).toBe(3);
+  });
+  
+  test('async data fetch', async () => {
+    const data = await fetchData();
+    expect(data.name).toBe('John');
+  });
+});</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">Python</span>
+                    </div>
+                    <pre><code><span class="comment"># 単体テスト</span>
+- <strong>pytest</strong>: 最も人気、豊富なプラグイン、フィクスチャ機能
+- <strong>unittest</strong>: 標準ライブラリ、JUnit風
+- <strong>nose2</strong>: unittestの拡張
+
+<span class="comment"># E2Eテスト  </span>
+- <strong>Selenium</strong>: 標準的、多言語対応
+- <strong>Playwright for Python</strong>: 高速、信頼性高い
+
+<span class="comment"># pytest例</span>
+import pytest
+
+def test_addition():
+    assert add(2, 3) == 5
+
+@pytest.fixture
+def db_connection():
+    conn = create_connection()
+    yield conn
+    conn.close()
+
+def test_user_creation(db_connection):
+    user = User.create(name="Alice", db=db_connection)
+    assert user.id is not None</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">Java</span>
+                    </div>
+                    <pre><code><span class="comment"># 単体テスト</span>
+- <strong>JUnit 5</strong>: 標準、アノテーション豊富
+- <strong>TestNG</strong>: 並列実行、データ駆動テスト
+- <strong>Mockito</strong>: モックフレームワーク
+
+<span class="comment"># JUnit 5例</span>
+@Test
+@DisplayName("計算のテスト")
+void testCalculation() {
+    assertEquals(5, calculator.add(2, 3));
+}
+
+@ParameterizedTest
+@ValueSource(strings = {"hello", "world"})
+void testWithParameters(String word) {
+    assertTrue(word.length() > 0);
+}</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">Go</span>
+                    </div>
+                    <pre><code><span class="comment"># 標準テスト</span>
+- <strong>testing</strong>: 標準パッケージ、シンプル
+- <strong>Testify</strong>: アサーション、モック機能
+- <strong>Ginkgo</strong>: BDD形式
+
+<span class="comment"># testing例</span>
+func TestAdd(t *testing.T) {
+    result := Add(2, 3)
+    if result != 5 {
+        t.Errorf("Expected 5, got %d", result)
+    }
+}
+
+<span class="comment"># テーブル駆動テスト</span>
+func TestMultiple(t *testing.T) {
+    tests := []struct {
+        name string
+        a, b int
+        want int
+    }{
+        {"positive", 2, 3, 5},
+        {"negative", -1, -1, -2},
+    }
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            if got := Add(tt.a, tt.b); got != tt.want {
+                t.Errorf("Add() = %v, want %v", got, tt.want)
+            }
+        })
+    }
+}</code></pre>
+                </div>
+
+                <h3>🎯 実践的なテストシナリオ</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">複雑なユーザーフロー（打刻システム例）</span>
+                    </div>
+                    <pre><code><span class="comment"># RSpec + Capybara での連続操作テスト</span>
+RSpec.feature '勤怠管理システム', type: :feature do
+  let!(:user) { create(:user, email: 'test@example.com') }
+  let!(:previous_record) { create(:attendance, user: user, 
+                                  check_in: 1.day.ago.at_beginning_of_day + 9.hours,
+                                  check_out: 1.day.ago.at_beginning_of_day + 18.hours) }
+  
+  scenario '連続した打刻操作' do
+    <span class="comment"># ログイン</span>
+    visit login_path
+    fill_in 'メールアドレス', with: 'test@example.com'
+    fill_in 'パスワード', with: 'password123'
+    click_button 'ログイン'
+    
+    <span class="comment"># 前日の記録確認</span>
+    expect(page).to have_content('前回の退勤: 18:00')
+    
+    <span class="comment"># 出勤打刻</span>
+    click_button '出勤'
+    expect(page).to have_content('出勤しました')
+    expect(page).to have_button('退勤', disabled: false)
+    expect(page).not_to have_button('出勤')
+    
+    <span class="comment"># DB確認</span>
+    expect(user.attendances.today.first.check_in).to be_present
+    
+    <span class="comment"># 時間を進める（Timecop使用）</span>
+    Timecop.travel(4.hours.from_now) do
+      visit current_path
+      
+      <span class="comment"># 休憩開始</span>
+      click_button '休憩開始'
+      expect(page).to have_content('休憩中')
+      
+      Timecop.travel(1.hour.from_now) do
+        <span class="comment"># 休憩終了</span>
+        click_button '休憩終了'
+        expect(page).to have_content('休憩時間: 1時間')
+      end
+    end
+    
+    <span class="comment"># 退勤打刻</span>
+    click_button '退勤'
+    expect(page).to have_content('お疲れ様でした')
+    
+    <span class="comment"># 最終的なDB状態確認</span>
+    attendance = user.attendances.today.first
+    expect(attendance.check_out).to be_present
+    expect(attendance.break_time).to eq(60) # 分単位
+  end
+end</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">DBトランザクションを含むテスト</span>
+                    </div>
+                    <pre><code><span class="comment"># 在庫管理システムのテスト（同時実行・ロック処理）</span>
+RSpec.describe OrderService, type: :service do
+  describe '#process_order' do
+    let!(:product) { create(:product, stock: 10, price: 1000) }
+    let(:user) { create(:user, balance: 5000) }
+    
+    context '正常な注文処理' do
+      it 'トランザクション内で在庫と残高を更新' do
+        service = OrderService.new(user, product, quantity: 3)
+        
+        expect {
+          result = service.process_order
+          expect(result).to be_success
+        }.to change { product.reload.stock }.from(10).to(7)
+         .and change { user.reload.balance }.from(5000).to(2000)
+         .and change { Order.count }.by(1)
+         .and change { OrderHistory.count }.by(1)
+      end
+    end
+    
+    context '同時注文での在庫制御' do
+      it '楽観的ロックで在庫超過を防ぐ' do
+        <span class="comment"># 2つの同時注文をシミュレート</span>
+        product_copy1 = Product.find(product.id)
+        product_copy2 = Product.find(product.id)
+        
+        <span class="comment"># 最初の注文で在庫を7個減らす</span>
+        product_copy1.update!(stock: 3)
+        
+        <span class="comment"># 2番目の注文は失敗するべき（在庫不足）</span>
+        expect {
+          product_copy2.with_lock do
+            product_copy2.decrement!(:stock, 5)
+          end
+        }.to raise_error(ActiveRecord::StaleObjectError)
+      end
+    end
+    
+    context 'ロールバック処理' do
+      it '支払い失敗時に全ての変更をロールバック' do
+        <span class="comment"># 残高不足のユーザー</span>
+        poor_user = create(:user, balance: 100)
+        
+        expect {
+          service = OrderService.new(poor_user, product, quantity: 3)
+          result = service.process_order
+          expect(result).to be_failure
+          expect(result.error).to eq('残高不足')
+        }.not_to change { [product.reload.stock, 
+                          poor_user.reload.balance, 
+                          Order.count] }
+      end
+    end
+  end
+end</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">外部API連携テスト（VCR使用）</span>
+                    </div>
+                    <pre><code><span class="comment"># 天気API連携のテスト</span>
+RSpec.describe WeatherService, type: :service do
+  describe '#get_forecast' do
+    <span class="comment"># VCRで実際のAPIレスポンスを記録・再生</span>
+    it '天気予報を取得して処理', vcr: { cassette_name: 'weather_tokyo' } do
+      service = WeatherService.new(city: 'Tokyo')
+      forecast = service.get_forecast
+      
+      expect(forecast).to include(
+        temperature: be_a(Numeric),
+        description: be_a(String),
+        humidity: be_between(0, 100)
+      )
+      
+      <span class="comment"># キャッシュの動作確認</span>
+      expect(Rails.cache.read('weather:Tokyo')).to eq(forecast)
+      
+      <span class="comment"># 2回目はAPIを呼ばない（VCRが1回しか記録していないことを確認）</span>
+      cached_forecast = service.get_forecast
+      expect(cached_forecast).to eq(forecast)
+    end
+    
+    context 'API障害時' do
+      it 'フォールバック処理' do
+        <span class="comment"># WebMockで障害をシミュレート</span>
+        stub_request(:get, /api.weather.com/)
+          .to_return(status: 503)
+        
+        service = WeatherService.new(city: 'Tokyo')
+        forecast = service.get_forecast
+        
+        expect(forecast).to eq({
+          temperature: nil,
+          description: 'サービス一時利用不可',
+          cached: true
+        })
+      end
+    end
+  end
+end</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="filename">Playwright での画面遷移テスト（JavaScript）</span>
+                    </div>
+                    <pre><code><span class="comment">// ECサイトの購入フロー完全テスト</span>
+import { test, expect } from '@playwright/test';
+
+test.describe('購入フロー', () => {
+  test.beforeEach(async ({ page }) => {
+    <span class="comment">// テストデータセットアップ</span>
+    await page.goto('/api/test/reset');
+    await page.goto('/api/test/seed');
+  });
+  
+  test('商品検索から購入完了まで', async ({ page }) => {
+    <span class="comment">// 1. ログイン</span>
+    await page.goto('/login');
+    await page.fill('[name="email"]', 'test@example.com');
+    await page.fill('[name="password"]', 'password');
+    await page.click('button[type="submit"]');
+    
+    <span class="comment">// ログイン成功を確認</span>
+    await expect(page).toHaveURL('/dashboard');
+    await expect(page.locator('.user-name')).toContainText('テストユーザー');
+    
+    <span class="comment">// 2. 商品検索</span>
+    await page.fill('[placeholder="商品を検索"]', 'ノートPC');
+    await page.press('[placeholder="商品を検索"]', 'Enter');
+    
+    <span class="comment">// 検索結果を確認</span>
+    await expect(page.locator('.search-results')).toBeVisible();
+    const results = page.locator('.product-card');
+    await expect(results).toHaveCount(5);
+    
+    <span class="comment">// 3. 商品詳細確認</span>
+    await results.first().click();
+    await expect(page).toHaveURL(/\/products\/\d+/);
+    
+    <span class="comment">// 在庫確認</span>
+    const stockText = await page.locator('.stock-info').textContent();
+    expect(parseInt(stockText)).toBeGreaterThan(0);
+    
+    <span class="comment">// 4. カートに追加</span>
+    await page.selectOption('select[name="quantity"]', '2');
+    await page.click('button:has-text("カートに追加")');
+    
+    <span class="comment">// トースト通知を確認</span>
+    await expect(page.locator('.toast-success')).toContainText('カートに追加しました');
+    
+    <span class="comment">// カートアイコンの数字更新を確認</span>
+    await expect(page.locator('.cart-badge')).toContainText('2');
+    
+    <span class="comment">// 5. チェックアウト</span>
+    await page.click('[aria-label="カート"]');
+    await expect(page.locator('.cart-item')).toHaveCount(1);
+    await page.click('button:has-text("購入手続きへ")');
+    
+    <span class="comment">// 6. 配送先入力</span>
+    await page.fill('[name="zipcode"]', '100-0001');
+    await page.click('button:has-text("住所自動入力")');
+    
+    <span class="comment">// 自動入力の完了を待つ</span>
+    await expect(page.locator('[name="prefecture"]')).toHaveValue('東京都');
+    
+    await page.fill('[name="address"]', '千代田区1-1-1');
+    await page.fill('[name="phone"]', '03-1234-5678');
+    
+    <span class="comment">// 7. 支払い方法選択</span>
+    await page.click('input[value="credit"]');
+    await page.fill('[name="card-number"]', '4242 4242 4242 4242');
+    await page.fill('[name="card-expiry"]', '12/25');
+    await page.fill('[name="card-cvc"]', '123');
+    
+    <span class="comment">// 8. 注文確認</span>
+    await page.click('button:has-text("注文内容を確認")');
+    
+    <span class="comment">// 合計金額の確認</span>
+    const total = await page.locator('.order-total').textContent();
+    expect(total).toMatch(/¥[\d,]+/);
+    
+    <span class="comment">// 9. 注文確定</span>
+    await page.click('button:has-text("注文を確定する")');
+    
+    <span class="comment">// 完了画面の確認</span>
+    await expect(page).toHaveURL('/orders/complete');
+    await expect(page.locator('h1')).toContainText('ご注文ありがとうございました');
+    
+    <span class="comment">// 注文番号の取得</span>
+    const orderNumber = await page.locator('.order-number').textContent();
+    expect(orderNumber).toMatch(/^ORD-\d{10}$/);
+    
+    <span class="comment">// 10. 注文履歴で確認</span>
+    await page.click('a:has-text("注文履歴を見る")');
+    await expect(page.locator(`[data-order="${orderNumber}"]`)).toBeVisible();
+  });
+  
+  test('在庫切れ商品の購入防止', async ({ page, context }) => {
+    <span class="comment">// 2つのブラウザタブで同時購入をシミュレート</span>
+    const page2 = await context.newPage();
+    
+    <span class="comment">// 両方のタブで同じ商品（在庫1個）を開く</span>
+    await Promise.all([
+      page.goto('/products/limited-item'),
+      page2.goto('/products/limited-item')
+    ]);
+    
+    <span class="comment">// 最初のタブで購入</span>
+    await page.click('button:has-text("今すぐ購入")');
+    await page.click('button:has-text("購入確定")');
+    await expect(page.locator('.success')).toBeVisible();
+    
+    <span class="comment">// 2番目のタブで購入試行</span>
+    await page2.click('button:has-text("今すぐ購入")');
+    await expect(page2.locator('.error')).toContainText('在庫切れ');
+  });
+});</code></pre>
+                </div>
+
+                <div class="tip">
+                    <h4>💡 テストツール選択のポイント</h4>
+                    <p><strong>単体テスト</strong>: 言語標準のツールから始めて、必要に応じて高機能なものへ</p>
+                    <p><strong>E2Eテスト</strong>: Playwright（高速・安定）、Cypress（デバッグ容易）から選択</p>
+                    <p><strong>API テスト</strong>: Postman/Insomnia でまず手動確認、その後自動化</p>
+                    <p><strong>負荷テスト</strong>: K6（開発者向け）、JMeter（GUIあり）が主流</p>
+                </div>
+
+                <div class="warning">
+                    <h4>⚠️ テスト設計の重要ポイント</h4>
+                    <ul>
+                        <li><strong>テストの独立性</strong>: 各テストは他のテストに依存しない</li>
+                        <li><strong>データの初期化</strong>: beforeEach/afterEachで確実にクリーンアップ</li>
+                        <li><strong>非同期処理の待機</strong>: 適切なwait/expectを使用（sleep避ける）</li>
+                        <li><strong>テストの保守性</strong>: Page Object Patternなどで重複を削減</li>
+                        <li><strong>flaky test対策</strong>: リトライ機能、適切なタイムアウト設定</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
